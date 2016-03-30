@@ -67,7 +67,7 @@ public class CustomFrame extends JFrame{
 		
 		
 		lblMessage = new JLabel();
-		lblMessage.setText("Type \"1\" and press \"confirm\".");
+		lblMessage.setText("Write \"1\" and press \"confirm\".");
 		lblMessage.setFont(fntSansSerif);
 		
 		//lblMessage.setAlignmentX(RIGHT_ALIGNMENT);

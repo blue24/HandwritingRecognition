@@ -25,6 +25,10 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	int prevDrag_y = -1;
 	
 	
+	float drawRadius = 3f;
+	
+	
+	
 	public DrawablePanel(){
 		clrWhite = new Color(255, 255, 255);
 		clrBlack = new Color(0, 0, 0);
@@ -79,8 +83,8 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 		});
 
 		
-		
 	}
+	
 	
 	
 	@Override
@@ -138,6 +142,66 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	}
 	
 	
+	void drawThickPoint(int targetX, int targetY){
+		
+		/*
+		for(int y = -2; y < 2; y++){
+			for(int x = -2; x < 2; x++ ){
+				
+				
+				int currentY = targetY + y;
+				int currentX = targetX + x;
+				
+				if(currentX >= 0 && currentY >= 0 && currentX < pixelsWidth && currentY < pixelsHeight ){
+					pixels[currentY][currentX] = true;
+				}
+				
+				
+			}
+		
+		}
+		*/
+		
+		
+		float unitSize = 0.2f;
+		
+		
+		for(float x = -drawRadius; x <= drawRadius; x+= unitSize){
+			
+			float y = (float)Math.sqrt(  -Math.pow(x, 2) + drawRadius);
+
+			
+			if(!Float.isNaN(y)){
+			
+				int currentY = (int) (targetY + y);
+				int currentY2 = (int) (targetY - y);
+				int currentX = (int) (targetX + x);
+				
+				
+				
+				for(int fillY = currentY2; fillY <= currentY; fillY++){
+					
+					if(fillY >= 0 && fillY < pixelsHeight ){
+						pixels[fillY][currentX] = true;
+					}
+					
+				}
+				
+				if(currentY == 0){
+					System.out.println("REPORT: " + y);
+				}
+				
+				
+			}//END OF if(!Float.isNaN(y))
+			
+		}//END OF for(float x = ...)
+		
+		//y = +- root(-x^2 + 2)
+		
+	}
+	
+	
+	
 	void onMouseDrag(int x, int y){
 		
 		//int myWidth = getWidth();
@@ -149,11 +213,15 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 			
 			if(prevDrag_x == -1 || prevDrag_y == -1){
 				//just color the current point.
-				pixels[y][x] = true;
+				//pixels[y][x] = true;
+				System.out.println("CALLED");
+				drawThickPoint(x, y);
 				
 			}else{
 				//Otherwise, color a line from the previously dragged-on point to here.
+				
 				drawLine(prevDrag_x, prevDrag_y, x, y);
+				
 			}
 			repaint();
 			
@@ -196,6 +264,8 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	    for (int i=0;i<=longest;i++) {
 	        //g.drawLine(x,y, x, y) ;
 	    	pixels[y][x] = true;
+	    	
+	    	drawThickPoint(x, y);
 	    	
 	    	numerator += shortest ;
 	        if (!(numerator<longest)) {

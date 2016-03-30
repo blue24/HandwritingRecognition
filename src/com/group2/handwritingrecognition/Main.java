@@ -4,6 +4,8 @@ public class Main {
 	
 	/*
 	SOURCE:
+	http://neuralnetworksanddeeplearning.com/chap1.html
+	
 	http://tech-algorithm.com/articles/backpropagation-neural-network/
 	http://mathworld.wolfram.com/SigmoidFunction.html
 	http://tech-algorithm.com/articles/dijkstra-algorithm/
@@ -29,6 +31,8 @@ public class Main {
 	https://tips4java.wordpress.com/2009/08/30/global-event-listeners/
 	http://stackoverflow.com/questions/9626293/actionlistener-not-working-java
 	http://stackoverflow.com/questions/8716483/mousedragging-in-gui
+	
+	http://neuralnetworksanddeeplearning.com/chap1.html
 	*/
 	
 	

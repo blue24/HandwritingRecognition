@@ -178,13 +178,14 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 				int currentX = (int) (targetX + x);
 				
 				
-				
-				for(int fillY = currentY2; fillY <= currentY; fillY++){
-					
-					if(fillY >= 0 && fillY < pixelsHeight ){
-						pixels[fillY][currentX] = true;
+				if(currentX  >= 0 && currentX < pixelsWidth){
+					for(int fillY = currentY2; fillY <= currentY; fillY++){
+						
+						if(fillY >= 0 && fillY < pixelsHeight ){
+							pixels[fillY][currentX] = true;
+						}
+						
 					}
-					
 				}
 				
 				if(currentY == 0){

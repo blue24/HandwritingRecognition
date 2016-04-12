@@ -6,9 +6,11 @@ public class CustomPanel extends JPanel {
 
 	
 	public CustomPanel(){
-		
+		super();
 		
 	}
+	
+	
 	
 	
 	

@@ -1,15 +1,20 @@
 package com.group2.handwritingrecognition;
+import java.awt.Color;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 
 
@@ -17,15 +22,6 @@ public class CustomFrame extends JFrame{
 	
 	private static final long serialVersionUID = -5763319334266549575L;
 	
-	public CustomPanel pan;
-	public DrawablePanel drawSubPan;
-	
-	public JButton btnConfirm;
-	public JButton btnClear;
-	
-	public JLabel lblMessage;
-	
-	
 
 	
 	
@@ -34,51 +30,142 @@ public class CustomFrame extends JFrame{
 	
 	
 	
+	public CustomPanel pan;
+	public DrawablePanel drawSubPan;
 	
 	
 	
+	
+
+	
+	public TextField txtOutput;
+	
+	
+	public JButton btnConfirm;
+	public JButton btnClear;
+	
+	public JLabel lblMessage;
+	
+	
+	public TrialMemory[] characterData;
+	
+	
+	public String currentInstructions;
+	
+	
+	TimerManager errorResetTimer;
+	
+	TimerManager errorFlashTimer1;
+	TimerManager errorFlashTimer2;
+	TimerManager errorFlashTimer3;
+	TimerManager errorFlashTimer4;
+	
+	
+	
+	int programMode = 0;
+	//0 = doing trials (insert number samples).
+	//1 = test (let the user draw).
+	
+	
+	int trialsLeft = 0;
+	int numberToDraw = 0;
 	
 	
 	Font fntSansSerif;
 	
 	
+	
+	
 	public CustomFrame(int defaultSize_x, int defaultSize_y){
+		super();
 		
-		fntSansSerif = new Font("SanSerif", Font.PLAIN, 20);
 		
+		characterData = new TrialMemory[10];
+		for(int i = 0; i < characterData.length; i++){
+			characterData[i] = new TrialMemory();
+		}
+		
+		
+		
+		
+		errorFlashTimer1 = new TimerManager(){
+			@Override public void action(){
+				lblMessage.setForeground(Static.clrRed);
+			}
+		};
+		errorFlashTimer2 = new TimerManager(){
+			@Override public void action(){
+				lblMessage.setForeground(Static.clrBlack);
+			}
+		};
+		errorFlashTimer3 = new TimerManager(){
+			@Override public void action(){
+				lblMessage.setForeground(Static.clrRed);
+			}
+		};
+		errorFlashTimer4 = new TimerManager(){
+			@Override public void action(){
+				lblMessage.setForeground(Static.clrBlack);
+			}
+		};
+		
+		errorResetTimer = new TimerManager(){
+			@Override
+			public void action(){
+				lblMessage.setText( currentInstructions );
+				
+				
+			}
+		};
+		
+		fntSansSerif = new Font("SanSerif", Font.PLAIN, 18);
 		
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		pan = new CustomPanel();
 		
 		pan.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-		
-		
 		pan.setLayout(new GridBagLayout());
-		
-		
 		
 		pan.setPreferredSize(new Dimension(defaultSize_x, defaultSize_y));
 		
 		//add(pan);
 		
-		drawSubPan = new DrawablePanel();
+		
+		drawSubPan = new DrawablePanel(this);
 		drawSubPan.setPreferredSize(new Dimension(500, 150) );
 		
 		
 		
+		this.getContentPane().add(pan);
+		this.setResizable(false);
+		
+		
+		//setGUITrial();
+		setGUIUse();
+		
+		
+		//this.setPreferredSize(new Dimension(800, 600));
+		
+		this.setVisible(true);
+	}
+	
+	
+	
+	void setGUITrial(){
+		
+		clearGUI();
+		
+		trialsLeft = Static.trialsPerNumber;
+		numberToDraw = 0;
+		
+		programMode = 0;
+		
+		
 		lblMessage = new JLabel();
-		lblMessage.setText("Write \"1\" and press \"confirm\".");
+		lblMessage.setText(currentInstructions);
 		lblMessage.setFont(fntSansSerif);
 		
-		//lblMessage.setAlignmentX(RIGHT_ALIGNMENT);
-		//?
 		
-		
-		
-		
-		
-		//pan.add(drawSubPan); 
-		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 2, 2, 1, 0.7,  1.0, 0, 0, pan, drawSubPan);
 		
 		
 		btnConfirm = new JButton();
@@ -102,42 +189,322 @@ public class CustomFrame extends JFrame{
 		btnClear.setFont(fntSansSerif);
 		
 		
+		
 		//pan.add(drawSubPan); 
-		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 1, 1, 0.7, 0.0, 0, 0, pan, lblMessage);
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 2, 2, 1, 0.7,  1.0, 0, 0, pan, drawSubPan);
 				
-
+		
+		//pan.add(drawSubPan); 
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 2, 1, 0.7, 0.0, 0, 0, pan, lblMessage);
+			
+		
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 3, 1, 1, 0.5, 0.0, 0, 0, pan, btnClear);
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 2, 3, 1, 1, 0.5, 0.0, 0, 0, pan, btnConfirm);
+		
+		
+		//Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 0, 1, 1, 0.2, 0.0, 0, 0, panel, txtPage);
+		
+		this.pack();
+		
+		drawSubPan.createPixelsArray();
+		
+		setupTrial(true);
+		
+	}
+	
+	
+	
+
+	void setGUIUse(){
+		
+		
+		clearGUI();
+		
+		trialsLeft = Static.trialsPerNumber;
+		numberToDraw = 0;
+		
+		programMode = 1;
+		
+		
+		currentInstructions = "Draw one number at a time and press \"confirm\" to submit.";
+		
+		lblMessage = new JLabel();
+		lblMessage.setText(currentInstructions);
+		lblMessage.setFont(fntSansSerif);
+		
+		
+		txtOutput = new TextField();
+		txtOutput.setEditable(false);
+		txtOutput.setFont(fntSansSerif);
+		
+		
+		JButton btnTxtClear = new JButton();
+		btnTxtClear.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				txtOutput.setText("");
+			}//END OF actionPerformed(...)
+		});
+		btnTxtClear.setText("Clear");
+		btnTxtClear.setFont(fntSansSerif);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		btnConfirm = new JButton();
+		btnConfirm.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				confirmClicked();
+			}//END OF actionPerformed(...)
+		});
+		btnConfirm.setText("Confirm");
+		btnConfirm.setFont(fntSansSerif);
+		
+		
+		btnClear = new JButton();
+		btnClear.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				clearClicked();
+			}//END OF actionPerformed(...)
+		});
+		btnClear.setText("Clear");
+		btnClear.setFont(fntSansSerif);
+		
+		
+		
+		JButton doTrials = new JButton();
+		doTrials.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				setGUITrial();
+			}//END OF actionPerformed(...)
+		});
+		doTrials.setText("Trials");
+		doTrials.setFont(fntSansSerif);
+		
+		
+
+		int windowWidth = getPreferredSize().width;
+		
+		JPanel tempPan = new JPanel();
+		tempPan.setLayout(new BoxLayout(tempPan, BoxLayout.X_AXIS));
+		//This means, "I want to be as wide as the window, or as close as I can be to that".
+		//Just use the minimum height necessary.
+		lblMessage.setPreferredSize(new Dimension(windowWidth, 0) );
+		
+		//Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 4, 1, 1.7, 0.0, 0, 0, pan, lblMessage);
+		//Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 3, 1, 2, 1, 0.0, 0.0, 0, 0, pan, doTrials);
+		tempPan.add(lblMessage);
+		tempPan.add(doTrials);
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 4, 1, 0.0, 0.0, 0, 0, pan, tempPan);
+		
+		
+		
+		JPanel tempPan2 = new JPanel();
+		tempPan2.setLayout(new BoxLayout(tempPan2, BoxLayout.X_AXIS));
+		//Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 2, 4, 1, 0.7, 0.0, 0, 0, pan, txtOutput);
+		txtOutput.setPreferredSize(new Dimension(windowWidth, 0) );
+		tempPan2.add(txtOutput);
+		tempPan2.add(btnTxtClear);
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 2, 4, 1, 0.0, 0.0, 0, 0, pan, tempPan2);
+		
+		
+		
+		
+
+		//pan.add(drawSubPan); 
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 3, 4, 1, 0.7,  1.0, 0, 0, pan, drawSubPan);
+		
+		
+		
+		
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 4, 2, 1, 0.5, 0.0, 0, 0, pan, btnClear);
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 3, 4, 2, 1, 0.5, 0.0, 0, 0, pan, btnConfirm);
 		
 		
 		
 		//Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 0, 1, 1, 0.2, 0.0, 0, 0, panel, txtPage);
 		
 		
-		
-		this.getContentPane().add(pan);
-
-		this.setResizable(false);
 		this.pack();
 		
-		
 		drawSubPan.createPixelsArray();
-		//this.setPreferredSize(new Dimension(800, 600));
-		this.setVisible(true);
+		
+		
+		
+	}
+	
+	
+	
+	void clearGUI(){
+		this.drawSubPan.removeAll();
+		this.pan.removeAll();
+
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	void setupTrial(boolean first){
+
+		if(!first){
+			trialsLeft --;
+			
+			
+			
+			if(trialsLeft == 0){
+				trialsLeft = Static.trialsPerNumber;
+				numberToDraw ++;
+				if(numberToDraw == 10){
+					
+					currentInstructions = "Done.";
+					lblMessage.setText(currentInstructions);
+					//TODO Plug all "characterData.trialMem" 's  into
+					//the neural network?
+					
+					setGUIUse();
+					
+					return;
+					
+					//end of trials!
+				}//END OF if(numberToDraw == 10)
+			}//END OF if(trialsLeft == 0)
+		}//END OF if(!first)
+		
+		
+		currentInstructions = "Write \"" + numberToDraw + "\" and press \"confirm\".  " + pluralize(trialsLeft, "trial", "trials") + " left.";
+		lblMessage.setText(currentInstructions);
+		
+	}//END OF setupTrial(...)
+	
+	
+	String pluralize(int quantity, String notPlural, String plural){
+		if(quantity == 1){
+			return quantity + " " + notPlural;
+		}else{
+			return quantity + " " + plural;
+		}
+	}
+	
+	
+	void showErrorMessage(String errorMessage){
+		
+		
+		flashMessageTextError();
+		
+		
+		lblMessage.setText(errorMessage);
+		errorResetTimer.setTimer(3.2f);
+		
+		
+		//errorResetTimer.cancel()?
+	}
+	
+	void flashMessageTextError(){
+		
+		lblMessage.setForeground(Static.clrRed);
+		
+		errorFlashTimer1.setTimer(0, 0.14f);
+		errorFlashTimer2.setTimer(0.07f, 0.21f);
+		
+		errorFlashTimer3.setTimer(0.65f, 0.79f);
+		errorFlashTimer4.setTimer(0.72f, 0.86f);
+		
 		
 	}
 	
 	
 	void confirmClicked(){
 		
+		
+		boolean[][] thisSample = drawSubPan.attemptRead();
+		
+		if(thisSample != null){
+			
+			if(Static.trialAdvancingOff == false){
+				cancelError();
+				drawSubPan.clearContents();
+				
+				int thisTrial = Static.trialsPerNumber - trialsLeft;
+				
+				
+
+				
+				if(programMode == 0){
+					
+					characterData[numberToDraw].trialMem[ thisTrial ] = thisSample;
+					//TODO Or, plug into neural network directly, as we receive them?
+					
+					setupTrial(false);
+					
+				}else if(programMode == 1){
+					
+					guess(thisSample);
+				}
+				
+				
+			}//END OF if(trialAdvancingOff == false)
+			
+		}//END OF if(thisSample != null)
+		
+		
+		
+		
+		
+	}//END OF void confirmClicked
+	
+	
+	
+	
+	void guess(boolean[][] thisSample){
+		
+		//TODO Plug into neural network...
+		
+		//...get outcome.
+		
+		
+		char guessChar = '0'; //BLANK FOR NOW.
+		
+		txtOutput.setText( txtOutput.getText() + guessChar );
+		
 	}
 	
+	
+	
+	
+	
 	void clearClicked(){
+		
+		cancelError();
+		
 		
 		drawSubPan.clearContents();
 	}
 	
 	
+	void cancelError(){
+		errorResetTimer.action();
+		//reset.
+		
+		errorFlashTimer1.cancel();
+		errorFlashTimer2.cancel();
+		errorFlashTimer3.cancel();
+		errorFlashTimer4.cancel();
+		errorResetTimer.cancel();
+		
+		lblMessage.setForeground(new Color(0, 0, 0));
+		
+	}
 	
 	
 	

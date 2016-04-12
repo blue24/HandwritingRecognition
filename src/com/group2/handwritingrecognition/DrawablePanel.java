@@ -14,24 +14,70 @@ import javax.swing.JPanel;
 
 public class DrawablePanel extends JPanel implements ComponentListener {
 	
-	Color clrWhite;
-	Color clrBlack;
+
+	
+	
+	
 	boolean[][] pixels;
 	int pixelsWidth;
 	int pixelsHeight;
+	
+
+	boolean[][] groupPixels;
 	
 	
 	int prevDrag_x = -1;
 	int prevDrag_y = -1;
 	
 	
-	float drawRadius = 3f;
+	float drawRadius = 2f;
+	
+	boolean drawnYet = false;
 	
 	
 	
-	public DrawablePanel(){
-		clrWhite = new Color(255, 255, 255);
-		clrBlack = new Color(0, 0, 0);
+	
+	int pixelDrawMinY = 999999;
+	int pixelDrawMaxY = -1;
+	int pixelDrawMinX = 999999;
+	int pixelDrawMaxX = -1;
+	
+	
+	//A reference back to the window.
+	CustomFrame frameRef; 
+	
+	
+	
+	
+	public DrawablePanel(CustomFrame arg_frameRef){
+		super();
+		
+		frameRef = arg_frameRef;
+		
+		/*
+		Thread thr = new Thread(){
+			
+			@Override
+			public void run(){
+				
+				while(true){
+					
+					if(shouldRepaint){
+						NEVER MIND
+					}
+					
+					try {
+						Thread.sleep(17);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+				}
+				
+			}
+		};
+		thr.start();
+		*/
 		
 		
 		this.addMouseMotionListener(new MouseMotionListener(){
@@ -89,11 +135,11 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	@Override
 	public void paint(Graphics g){
-		g.setColor(clrWhite);
+		g.setColor(Static.clrWhite);
 		//g.drawLine(0,  0,  15,  15);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		
-		g.setColor(clrBlack);
+		g.setColor(Static.clrBlack);
 		if(pixels != null){
 			for(int y = 0; y < pixelsHeight; y++){
 				for(int x = 0; x < pixelsWidth; x++){
@@ -103,6 +149,28 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 				}
 			}
 		}
+		
+		
+		if(Static.drawDebug){
+			drawSectors(g);
+			
+			g.setColor(Static.clrRed);
+			drawSquare(g, pixelDrawMinX, pixelDrawMinY, pixelDrawMaxX, pixelDrawMaxY);
+		}
+		
+		
+		/*
+		g.drawLine(pixelDrawMinX, pixelDrawMinY, pixelDrawMaxX, pixelDrawMinY);
+		
+		g.drawLine(pixelDrawMinX, pixelDrawMaxY, pixelDrawMaxX, pixelDrawMaxY);
+		
+		
+		g.drawLine(pixelDrawMinX, pixelDrawMinY, pixelDrawMinX, pixelDrawMaxY);
+		
+		g.drawLine(pixelDrawMaxX, pixelDrawMinY, pixelDrawMaxX, pixelDrawMaxY);
+		*/
+		
+		
 		
 		
 	}
@@ -134,6 +202,198 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	}
 	
 	
+	
+	
+	void drawSquare(Graphics g, int x1, int y1, int x2, int y2){
+		
+		
+		
+		g.drawLine(x1, y1, x2, y1);
+		g.drawLine(x1, y2, x2, y2);
+		
+		g.drawLine(x1, y1, x1, y2);
+		g.drawLine(x2, y1, x2, y2);
+		
+		
+	}
+	
+	
+	void drawSectors(Graphics g){
+		
+		/*
+		if(groupPixels == null){
+			//can't draw it then.
+			return;
+		}
+		*/
+
+		int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
+		int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
+		
+		
+		float sectorWidth = ((float)usedBoundsWidth / (float)Static.groupPixelsWidth);
+		float sectorHeight = ((float)usedBoundsHeight / (float)Static.groupPixelsHeight);
+		
+		g.setColor(Static.clrGreen);
+		
+		
+		
+		
+		int drawnPixels = 0;
+		int blankPixels = 0;
+		
+		for(int gY = 0; gY < Static.groupPixelsHeight; gY++){
+			for(int gX = 0; gX < Static.groupPixelsWidth; gX++){
+				
+				//Counting these per sector, reset when checking a new sector...
+				drawnPixels = 0;
+				blankPixels = 0;
+				
+				
+				
+				for(int y = 0; y < sectorHeight; y++){
+					for(int x = 0; x < sectorWidth; x++){
+						
+						int trueX = pixelDrawMinX + (int) (gX*sectorWidth) + x;
+						int trueY = pixelDrawMinY + (int) (gY*sectorHeight) + y;
+						
+						if(pixels[trueY][trueX] == true){
+							drawnPixels++;
+						}else{
+							blankPixels++;
+						}
+						
+					}
+				}
+				
+				
+				int offX = pixelDrawMinX + (int)(gX*sectorWidth);
+				int offY = pixelDrawMinY + (int)(gY*sectorHeight);
+				
+				g.setColor(Static.clrGreen);
+				drawSquare(g, offX, offY, offX + (int)sectorWidth, offY + (int)sectorHeight);
+				
+				
+				float drawnRatio = (float)drawnPixels / (float)(drawnPixels + blankPixels);
+				
+				if(drawnPixels >= Static.pixelsRequiredInSector || drawnRatio >= Static.sectorRegisterRatio){
+					//groupPixels[gY][gX] = true;
+					Color eh = new Color(0, 255, 255, 185);
+					g.setColor(eh);
+					g.fillRect(offX, offY, (int)sectorWidth, (int)sectorHeight);
+					
+				}else{
+					//groupPixels[gY][gX] = false;
+				}
+				
+				
+				
+				
+				
+				
+				/*
+				int offX = pixelDrawMinX + (int)(gX*sectorWidth);
+				int offY = pixelDrawMinY + (int)(gY*sectorHeight);
+				
+				g.setColor(Static.clrGreen);
+				drawSquare(g, offX, offY, offX + (int)sectorWidth, offY + (int)sectorHeight);
+				
+				if(groupPixels[gY][gX] == true){
+					
+					
+					Color eh = new Color(0, 255, 255, 185);
+					g.setColor(eh);
+					g.fillRect(offX, offY, (int)sectorWidth, (int)sectorHeight);
+					
+					
+					//drawLine(offX, offY, offX + sectorWidth, offY + sectorHeight);
+				}
+				
+				*/
+				//groupPixels[gY][gX];
+				
+				
+			}//END OF for(int gX = 0...)
+			
+		}//END OF for(int gY = 0...)
+		
+		
+		
+	}
+	
+	
+	
+	boolean[][] attemptRead(){
+		
+		if(drawnYet){
+			groupPixels = new boolean[Static.groupPixelsHeight][Static.groupPixelsWidth];
+
+			/*
+			pixelDrawMinY = 999999;
+			pixelDrawMaxY = -1;
+			pixelDrawMinX = 999999;
+			pixelDrawMaxX = -1;
+			*/
+			
+			int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
+			int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
+			
+			
+			float sectorWidth = ((float)usedBoundsWidth / (float)Static.groupPixelsWidth);
+			float sectorHeight = ((float)usedBoundsHeight / (float)Static.groupPixelsHeight);
+			
+			int blankPixels = 0;
+			int drawnPixels = 0;
+			
+			for(int gY = 0; gY < Static.groupPixelsHeight; gY++){
+				for(int gX = 0; gX < Static.groupPixelsWidth; gX++){
+					
+					//Counting these per sector, reset when checking a new sector...
+					drawnPixels = 0;
+					blankPixels = 0;
+					for(int y = 0; y < sectorHeight; y++){
+						for(int x = 0; x < sectorWidth; x++){
+							
+							int trueX = pixelDrawMinX + (int) (gX*sectorWidth) + x;
+							int trueY = pixelDrawMinY + (int) (gY*sectorHeight) + y;
+							
+							if(pixels[trueY][trueX] == true){
+								drawnPixels++;
+							}else{
+								blankPixels++;
+							}
+							
+						}
+					}
+					
+					float drawnRatio = (float)drawnPixels / (float)(drawnPixels + blankPixels);
+					
+					if(drawnPixels >= Static.pixelsRequiredInSector || drawnRatio >= Static.sectorRegisterRatio){
+						groupPixels[gY][gX] = true;
+					}else{
+						groupPixels[gY][gX] = false;
+					}
+					
+				}//END OF for(int gX = 0...)
+				
+			}//END OF for(int gY = 0...)
+			
+			
+
+			this.repaint();
+			
+			return groupPixels;
+		}else{
+			
+			frameRef.showErrorMessage("ERROR: Haven\'t drawn anything yet!");
+			return null;
+			
+		}//END OF else OF if(drawnYet)
+
+		
+	}//END OF attemptRead()
+	
+	
 	void onMouseClicked(int x, int y){
 		//exact same logic, routing to "onMouseDrag".
 		onMouseDrag(x, y);
@@ -143,6 +403,12 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	
 	void drawThickPoint(int targetX, int targetY){
+		
+		//The user has drawn since the screen was cleared.
+		
+		
+		
+		
 		
 		/*
 		for(int y = -2; y < 2; y++){
@@ -163,20 +429,78 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 		*/
 		
 		
-		float unitSize = 0.2f;
+
+
+		int pointFurthestLeft = (int) Math.round(targetX - drawRadius);
+		int pointFurthestRight = (int) Math.round(targetX + drawRadius);
 		
+		int pointFurthestUp = (int) Math.round(targetY - drawRadius);
+		int pointFurthestDown = (int) Math.round(targetY + drawRadius);
+		
+		
+		if(pointFurthestLeft >= pixelsWidth ||
+			pointFurthestRight < 0 ||
+			pointFurthestUp >= pixelsHeight ||
+			pointFurthestDown < 0)
+		{
+			//The entire point is guaranteed out of bounds.  Return (no points rendered)!
+			return;
+		}
+		
+		
+		
+
+		if(pointFurthestLeft < 0){
+			pointFurthestLeft = 0;
+		}
+		if(pointFurthestRight >= pixelsWidth){
+			pointFurthestRight = pixelsWidth - 1;
+		}
+		if(pointFurthestUp < 0){
+			pointFurthestUp = 0;
+		}
+		if(pointFurthestDown >= pixelsHeight){
+			pointFurthestDown = pixelsHeight - 1;
+		}
+		
+		
+		
+		if(pointFurthestLeft < pixelDrawMinX){
+			pixelDrawMinX = pointFurthestLeft;
+		}
+		
+		if(pointFurthestRight > pixelDrawMaxX){
+			pixelDrawMaxX = pointFurthestRight;
+		}
+		
+		if(pointFurthestUp < pixelDrawMinY){
+			pixelDrawMinY = pointFurthestUp;
+		}
+		
+		if(pointFurthestDown > pixelDrawMaxY){
+			pixelDrawMaxY = pointFurthestDown;
+		}
+		
+		
+		
+		
+		drawnYet = true;
+		
+		
+		float drawRadiusSquared = (float) Math.pow(drawRadius, 2);
+		
+		float unitSize = 1f;
 		
 		for(float x = -drawRadius; x <= drawRadius; x+= unitSize){
 			
-			float y = (float)Math.sqrt(  -Math.pow(x, 2) + drawRadius);
-
+			float y = (float)Math.sqrt(  -Math.pow(x, 2) + drawRadiusSquared);
+			
 			
 			if(!Float.isNaN(y)){
 			
-				int currentY = (int) (targetY + y);
-				int currentY2 = (int) (targetY - y);
-				int currentX = (int) (targetX + x);
-				
+				int currentY = Math.round(targetY + y);
+				int currentY2 = Math.round(targetY - y);
+				int currentX = Math.round(targetX + x);
 				
 				if(currentX  >= 0 && currentX < pixelsWidth){
 					for(int fillY = currentY2; fillY <= currentY; fillY++){
@@ -188,10 +512,11 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 					}
 				}
 				
+				/*
 				if(currentY == 0){
 					System.out.println("REPORT: " + y);
 				}
-				
+				*/
 				
 			}//END OF if(!Float.isNaN(y))
 			
@@ -215,7 +540,7 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 			if(prevDrag_x == -1 || prevDrag_y == -1){
 				//just color the current point.
 				//pixels[y][x] = true;
-				System.out.println("CALLED");
+				//System.out.println("CALLED");
 				drawThickPoint(x, y);
 				
 			}else{
@@ -283,6 +608,15 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	
 	void clearContents(){
+		drawnYet = false;
+		//The user has not drawn since the screen was cleared as of now.
+		
+		
+		pixelDrawMinY = 999999;
+		pixelDrawMaxY = -1;
+		pixelDrawMinX = 999999;
+		pixelDrawMaxX = -1;
+		
 		if(pixels != null){
 			
 			for(int y = 0; y < pixelsHeight; y++){

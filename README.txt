@@ -1,5 +1,3 @@
-Just a link:
+NOTICE:
 
-http://karpathy.github.io/neuralnets/
-
-~Anyone may add / modify this as document as needed.
+See Static.java for some debugging variables.  They are "on" by default for now.

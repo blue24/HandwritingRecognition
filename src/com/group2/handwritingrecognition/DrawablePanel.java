@@ -44,6 +44,7 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	
 	//A reference back to the window.
+	//NOTICE: currently unused.  Remove entirely?
 	CustomFrame frameRef; 
 	
 	
@@ -220,12 +221,12 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	void drawSectors(Graphics g){
 		
-		/*
-		if(groupPixels == null){
+		
+		if(pixels == null || drawnYet == false){
 			//can't draw it then.
 			return;
 		}
-		*/
+		
 
 		int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
 		int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
@@ -380,7 +381,6 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 			return groupPixels;
 		}else{
 			
-			frameRef.showErrorMessage("ERROR: Haven\'t drawn anything yet!");
 			return null;
 			
 		}//END OF else OF if(drawnYet)

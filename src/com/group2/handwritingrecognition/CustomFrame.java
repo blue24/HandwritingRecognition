@@ -90,31 +90,39 @@ public class CustomFrame extends JFrame{
 		
 		errorFlashTimer1 = new TimerManager(){
 			@Override public void action(){
-				lblMessage.setForeground(Static.clrRed);
+				if(lblMessage != null){
+					lblMessage.setForeground(Static.clrRed);
+				}
 			}
 		};
 		errorFlashTimer2 = new TimerManager(){
 			@Override public void action(){
-				lblMessage.setForeground(Static.clrBlack);
+				if(lblMessage != null){
+					lblMessage.setForeground(Static.clrBlack);
+				}
 			}
 		};
 		errorFlashTimer3 = new TimerManager(){
 			@Override public void action(){
-				lblMessage.setForeground(Static.clrRed);
+				if(lblMessage != null){
+					lblMessage.setForeground(Static.clrRed);
+				}
 			}
 		};
 		errorFlashTimer4 = new TimerManager(){
 			@Override public void action(){
-				lblMessage.setForeground(Static.clrBlack);
+				if(lblMessage != null){
+					lblMessage.setForeground(Static.clrBlack);
+				}
 			}
 		};
 		
 		errorResetTimer = new TimerManager(){
 			@Override
 			public void action(){
-				lblMessage.setText( currentInstructions );
-				
-				
+				if(lblMessage != null){
+					lblMessage.setText( currentInstructions );
+				}
 			}
 		};
 		
@@ -342,6 +350,11 @@ public class CustomFrame extends JFrame{
 	
 	
 	void clearGUI(){
+		
+		cancelError();
+		drawSubPan.clearContents();
+		
+		
 		this.drawSubPan.removeAll();
 		this.pan.removeAll();
 
@@ -438,7 +451,7 @@ public class CustomFrame extends JFrame{
 				int thisTrial = Static.trialsPerNumber - trialsLeft;
 				
 				
-
+				
 				
 				if(programMode == 0){
 					
@@ -456,7 +469,11 @@ public class CustomFrame extends JFrame{
 			}//END OF if(trialAdvancingOff == false)
 			
 		}//END OF if(thisSample != null)
-		
+		else{
+			showErrorMessage("ERROR: Haven\'t drawn anything yet!");
+			
+			
+		}
 		
 		
 		
@@ -502,8 +519,9 @@ public class CustomFrame extends JFrame{
 		errorFlashTimer4.cancel();
 		errorResetTimer.cancel();
 		
-		lblMessage.setForeground(new Color(0, 0, 0));
-		
+		if(lblMessage != null){
+			lblMessage.setForeground(new Color(0, 0, 0));
+		}
 	}
 	
 	

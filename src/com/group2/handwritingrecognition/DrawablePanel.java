@@ -37,10 +37,10 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	
 	
-	int pixelDrawMinY = 999999;
-	int pixelDrawMaxY = -1;
-	int pixelDrawMinX = 999999;
-	int pixelDrawMaxX = -1;
+	int pixelDrawMinY = Integer.MAX_VALUE;
+	int pixelDrawMaxY = Integer.MIN_VALUE;
+	int pixelDrawMinX = Integer.MAX_VALUE;
+	int pixelDrawMaxX = Integer.MIN_VALUE;
 	
 	
 	//A reference back to the window.
@@ -328,12 +328,7 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 		if(drawnYet){
 			groupPixels = new boolean[Static.groupPixelsHeight][Static.groupPixelsWidth];
 
-			/*
-			pixelDrawMinY = 999999;
-			pixelDrawMaxY = -1;
-			pixelDrawMinX = 999999;
-			pixelDrawMaxX = -1;
-			*/
+			
 			
 			int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
 			int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
@@ -612,10 +607,10 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 		//The user has not drawn since the screen was cleared as of now.
 		
 		
-		pixelDrawMinY = 999999;
-		pixelDrawMaxY = -1;
-		pixelDrawMinX = 999999;
-		pixelDrawMaxX = -1;
+		pixelDrawMinY = Integer.MAX_VALUE;
+		pixelDrawMaxY = Integer.MIN_VALUE;
+		pixelDrawMinX = Integer.MAX_VALUE;
+		pixelDrawMaxX = Integer.MIN_VALUE;
 		
 		if(pixels != null){
 			

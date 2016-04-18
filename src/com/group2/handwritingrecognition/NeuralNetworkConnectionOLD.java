@@ -1,8 +1,8 @@
 package com.group2.handwritingrecognition;
 
-import com.group2.handwritingrecognition.NeuralNetwork.Node;
+import com.group2.handwritingrecognition.NeuralNetworkOLD.Node;
 
-public class NeuralNetworkConnection {
+public class NeuralNetworkConnectionOLD {
 
 	float strength;
 	Node inNode;

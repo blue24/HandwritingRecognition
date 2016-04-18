@@ -13,12 +13,20 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	
 	
+	static int defaultWindowWidth = 800;
+	static int defaultWindowHeight = 600;
+	
+	//Can the window be resized by the user?
+	static boolean windowIsResizable = true;
+	
+	static boolean debugTestLoadImage = true;
+	
 	/*
 	These two conditions are used to tell whether a sector (one of the 16ths, as of yet)
 	will be considered written or not.  This is an OR case; either lets this sector count.
 	*/
 	//If there are this many pixels in a sector, it counts.
-	static int pixelsRequiredInSector = 20;
+	static int pixelsRequiredInSector = 10;
 	//If this great of a portion (0 = none, 1 = solid) are shaded, it counts.
 	static float sectorRegisterRatio = 0.25f;
 	
@@ -32,8 +40,8 @@ public class Static {
 	static boolean drawDebug = true;
 	
 	//By what factor will the bounded region be split?  Default is groups of 16x16.
-	static int groupPixelsWidth = 16;
-	static int groupPixelsHeight = 16;
+	static int groupPixelsWidth = 32;
+	static int groupPixelsHeight = 32;
 	
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////

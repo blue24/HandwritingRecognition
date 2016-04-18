@@ -6,13 +6,14 @@ import java.awt.Graphics;
 import java.awt.GridBagLayout;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JPanel;
 
-public class DrawablePanel extends JPanel implements ComponentListener {
+public class DrawablePanel extends JPanel {
 	
 
 	
@@ -21,6 +22,7 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	boolean[][] pixels;
 	int pixelsWidth;
 	int pixelsHeight;
+	
 	
 
 	boolean[][] groupPixels;
@@ -35,8 +37,6 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	boolean drawnYet = false;
 	
 	
-	
-	
 	int pixelDrawMinY = Integer.MAX_VALUE;
 	int pixelDrawMaxY = Integer.MIN_VALUE;
 	int pixelDrawMinX = Integer.MAX_VALUE;
@@ -46,6 +46,63 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	//A reference back to the window.
 	//NOTICE: currently unused.  Remove entirely?
 	CustomFrame frameRef; 
+	
+	boolean resizedSince = false;
+
+	
+	
+	public void attemptResizePixelArray(){
+		
+		
+			int testWidth = getWidth();
+			int testHeight = getHeight();
+			
+			if(testWidth != pixelsWidth || testHeight != pixelsHeight){
+				//Resize the pixels array.
+				
+				
+
+				
+				boolean[][] newPixels = new boolean[testHeight][testWidth];
+				
+				
+				for(int y = 0; y < pixelsHeight && y < testHeight; y++){
+					for(int x = 0; x < pixelsWidth && x < testWidth; x++){
+						newPixels[y][x] = pixels[y][x];
+						
+					}
+				}
+				
+				pixelsWidth = testWidth;
+				pixelsHeight = testHeight;
+				pixels = newPixels;
+				
+				if(pixelDrawMaxX >= pixelsWidth){
+					pixelDrawMaxX = pixelsWidth - 1;
+				}
+				if(pixelDrawMaxY >= pixelsHeight){
+					pixelDrawMaxY = pixelsHeight - 1;
+				}
+				
+				
+				
+				/*
+				pixelDrawMinY = Integer.MAX_VALUE;
+				pixelDrawMaxY = Integer.MIN_VALUE;
+				pixelDrawMinX = Integer.MAX_VALUE;
+				pixelDrawMaxX = Integer.MIN_VALUE;
+				drawnYet = false;
+				*/
+				
+				repaint();
+				
+			}
+		
+		
+		
+	}
+	
+	
 	
 	
 	
@@ -81,6 +138,46 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 		*/
 		
 		
+		
+		final DrawablePanel refBack = this;
+		
+		
+		
+		
+		
+
+		this.addComponentListener(new ComponentListener(){
+			
+			
+
+			@Override
+			public void componentHidden(ComponentEvent arg0) {
+				
+			}
+
+			@Override
+			public void componentMoved(ComponentEvent arg0) {
+				
+			}
+
+			@Override
+			public void componentResized(ComponentEvent arg0) {
+				
+				resizedSince = true;
+				
+			}
+
+			@Override
+			public void componentShown(ComponentEvent arg0) {
+				
+			}
+			
+			
+		});
+		
+		
+		
+		
 		this.addMouseMotionListener(new MouseMotionListener(){
 
 			@Override
@@ -107,7 +204,9 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 
 			@Override
 			public void mouseEntered(MouseEvent arg0) {
-				
+				if(resizedSince){
+					attemptResizePixelArray();
+				}
 			}
 
 			@Override
@@ -118,7 +217,6 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				onMouseClicked(arg0.getX(), arg0.getY());
-				
 			}
 
 			@Override
@@ -625,27 +723,6 @@ public class DrawablePanel extends JPanel implements ComponentListener {
 	
 	
 
-	@Override
-	public void componentHidden(ComponentEvent arg0) {
-		
-	}
-
-	@Override
-	public void componentMoved(ComponentEvent arg0) {
-		
-	}
-
-	@Override
-	public void componentResized(ComponentEvent arg0) {
-		// TODO Auto-generated method stub
-		//Do if we plan on supporting window resizes.
-		
-	}
-
-	@Override
-	public void componentShown(ComponentEvent arg0) {
-		
-	}
 	
 	
 

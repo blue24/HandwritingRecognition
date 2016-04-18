@@ -9,6 +9,16 @@ import java.awt.GridBagLayout;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Timer;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -28,14 +38,14 @@ public class CustomFrame extends JFrame{
 	
 	
 	
-	
+	public NeuralNetwork net;
 	
 	public CustomPanel pan;
 	public DrawablePanel drawSubPan;
 	
 	
 	
-	
+	public boolean startWithTrial = true;
 
 	
 	public TextField txtOutput;
@@ -62,6 +72,7 @@ public class CustomFrame extends JFrame{
 	
 	
 	
+	
 	int programMode = 0;
 	//0 = doing trials (insert number samples).
 	//1 = test (let the user draw).
@@ -75,7 +86,6 @@ public class CustomFrame extends JFrame{
 	
 	
 	
-	
 	public CustomFrame(int defaultSize_x, int defaultSize_y){
 		super();
 		
@@ -84,6 +94,43 @@ public class CustomFrame extends JFrame{
 		for(int i = 0; i < characterData.length; i++){
 			characterData[i] = new TrialMemory();
 		}
+		
+		//NOTE: neural network stats here.
+		
+		int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
+		int numbOfNeuronsPerHiddenLayer = Static.groupPixelsWidth * Static.groupPixelsHeight * 2;  //same? double it? unsure.
+		
+		net = new NeuralNetwork(numbOfInputNeurons, numbOfNeuronsPerHiddenLayer, 1, 10);
+		
+		
+		if(new File("memory/characterData.dat").exists() ){
+			
+			startWithTrial = false;
+		
+			try {
+				FileInputStream fileIn = new FileInputStream("memory/characterData.dat");
+				ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+				characterData = (TrialMemory[]) objectIn.readObject();
+				objectIn.close();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+			//TODO: Train the neural network with the "characterData":
+			net.clear();
+			net.train(characterData);
+			
+		}else{
+			startWithTrial = true;
+			//Let the user give samples, if none exist to train the network with.
+		}
+		   
+		   
+		
+		
+		
+
+		
 		
 		
 		
@@ -145,17 +192,55 @@ public class CustomFrame extends JFrame{
 		
 		
 		this.getContentPane().add(pan);
-		this.setResizable(false);
+		this.setResizable(Static.windowIsResizable);
 		
 		
+		
+		
+		
+		if(startWithTrial){
+			setGUITrial();
+		}else{
+			setGUIUse();
+		}
 		//setGUITrial();
-		setGUIUse();
+		
+		//setGUIUse();
+		
+		
 		
 		
 		//this.setPreferredSize(new Dimension(800, 600));
 		
 		this.setVisible(true);
-	}
+		
+		
+		
+		if(Static.debugTestLoadImage){
+			
+			
+			for(int i = 0; i < characterData.length; i++){
+				for(int i2 = 0; i2 < characterData[i].trialMem.length; i2++){
+					for(int y = 0; y < characterData[i].trialMem[i2].length; y++){
+						for(int x = 0; x < characterData[i].trialMem[i2][y].length; x++){
+							int modx = i * 32;
+							int mody = i2 * 32;
+							
+							this.drawSubPan.pixels[y + mody][x + modx] = characterData[i].trialMem[i2][y][x];
+								
+						}		
+					}
+				}
+			}
+			
+			
+			
+		}//END OF if(Static.debugTestLoadImage)
+		
+		
+	}//END OF CustomFrame(...) constructor
+	
+	
 	
 	
 	
@@ -378,12 +463,43 @@ public class CustomFrame extends JFrame{
 			if(trialsLeft == 0){
 				trialsLeft = Static.trialsPerNumber;
 				numberToDraw ++;
+				
+				//TODO: USED TO BE == 10, 2 for testing.
 				if(numberToDraw == 10){
 					
 					currentInstructions = "Done.";
 					lblMessage.setText(currentInstructions);
 					//TODO Plug all "characterData.trialMem" 's  into
 					//the neural network?
+					
+					try {
+						File f = new File("memory");
+						if(f.exists() == false){
+							f.mkdirs();
+						}
+						
+						//System.out.println("NULL?! " + characterData[0].trialMem[0]);
+						
+						FileOutputStream fileOut = new FileOutputStream("memory/characterData.dat");
+						ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+						System.out.println("CHECK1");
+						objectOut.writeObject(characterData);
+						System.out.println("CHECK2");
+						objectOut.close();
+						fileOut.close();
+					}
+					catch(Exception e){
+						e.printStackTrace();
+					}
+					
+					net.clear();
+					net.train(characterData);
+					
+					
+					//AND.  Save either the trials OR the resulting neural network to a file.
+					
+					
+					
 					
 					setGUIUse();
 					
@@ -442,6 +558,8 @@ public class CustomFrame extends JFrame{
 		
 		boolean[][] thisSample = drawSubPan.attemptRead();
 		
+		
+		
 		if(thisSample != null){
 			
 			if(Static.trialAdvancingOff == false){
@@ -452,9 +570,9 @@ public class CustomFrame extends JFrame{
 				
 				
 				
-				
 				if(programMode == 0){
 					
+					System.out.println("number to draw: " + numberToDraw + " Trial: " + thisTrial );
 					characterData[numberToDraw].trialMem[ thisTrial ] = thisSample;
 					//TODO Or, plug into neural network directly, as we receive them?
 					
@@ -468,12 +586,32 @@ public class CustomFrame extends JFrame{
 				
 			}//END OF if(trialAdvancingOff == false)
 			
+			
+			
+
+			/*
+			for(int y = 0; y < thisSample.length; y++){
+				for(int x = 0; x < thisSample[0].length; x++){
+					if(thisSample[y][x] == true){
+						System.out.print('1');
+					}else{
+						System.out.print('0');
+					}
+					
+				}
+				System.out.println();
+			}
+			*/
+			
+			
+			
 		}//END OF if(thisSample != null)
 		else{
 			showErrorMessage("ERROR: Haven\'t drawn anything yet!");
 			
 			
 		}
+		
 		
 		
 		
@@ -490,9 +628,12 @@ public class CustomFrame extends JFrame{
 		//...get outcome.
 		
 		
-		char guessChar = '0'; //BLANK FOR NOW.
+		int guessNumb = net.attemptTrial(thisSample);
 		
-		txtOutput.setText( txtOutput.getText() + guessChar );
+		
+		txtOutput.setText( txtOutput.getText() + guessNumb );
+		
+		
 		
 	}
 	

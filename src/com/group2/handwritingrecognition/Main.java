@@ -38,7 +38,7 @@ public class Main {
 	
 	public static void main(String[] args){
 		
-		CustomFrame theFrame = new CustomFrame(600, 400);
+		CustomFrame theFrame = new CustomFrame(Static.defaultWindowWidth, Static.defaultWindowHeight);
 		
 	}
 	

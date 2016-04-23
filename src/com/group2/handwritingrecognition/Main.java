@@ -40,6 +40,7 @@ public class Main {
 		
 		CustomFrame theFrame = new CustomFrame(Static.defaultWindowWidth, Static.defaultWindowHeight);
 		
+		
 	}
 	
 	

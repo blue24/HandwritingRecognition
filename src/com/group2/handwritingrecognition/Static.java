@@ -12,6 +12,18 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
+	static int groupPixelsWidth = 14;
+	static int groupPixelsHeight = 14;
+	
+	
+	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
+	static int numbOfNeuronsPerHiddenLayer = Static.groupPixelsWidth * Static.groupPixelsHeight / 10;  //same? double it? unsure.
+	static int numberOfHiddenLayers = 1;
+	static int numberOfOutputNeurons = 10;
+	
+	
+	
+	static boolean forceNoLoad = false;
 	
 	static int defaultWindowWidth = 800;
 	static int defaultWindowHeight = 600;
@@ -20,6 +32,18 @@ public class Static {
 	static boolean windowIsResizable = true;
 	
 	static boolean debugTestLoadImage = true;
+	
+	static LoadMode loadMode = LoadMode.LOADWEIGHTS;
+			
+			
+	public enum LoadMode{
+		NOTHING, LOADTRIALS, LOADWEIGHTS
+		
+		
+	}
+
+	
+	static int timesToTrainEach = 3000;
 	
 	/*
 	These two conditions are used to tell whether a sector (one of the 16ths, as of yet)
@@ -34,14 +58,13 @@ public class Static {
 	static boolean trialAdvancingOff = false;
 
 	//How many trials for each number?
-	static int trialsPerNumber = 3;
+	static int trialsPerNumber = 10;
 	
 	//Draw debug-things (the bounding rect of a number, sector-divisions, etc.)
 	static boolean drawDebug = true;
 	
 	//By what factor will the bounded region be split?  Default is groups of 16x16.
-	static int groupPixelsWidth = 32;
-	static int groupPixelsHeight = 32;
+	
 	
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////

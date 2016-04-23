@@ -16,6 +16,7 @@ import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Timer;
@@ -33,8 +34,6 @@ public class CustomFrame extends JFrame{
 	private static final long serialVersionUID = -5763319334266549575L;
 	
 
-	
-	
 	
 	
 	
@@ -71,6 +70,8 @@ public class CustomFrame extends JFrame{
 	TimerManager errorFlashTimer4;
 	
 	
+	String expectedDataName = "";
+	String expectedWeightsDataName = "";
 	
 	
 	int programMode = 0;
@@ -85,10 +86,17 @@ public class CustomFrame extends JFrame{
 	Font fntSansSerif;
 	
 	
+	boolean loadedSomething = false;
+	
 	
 	public CustomFrame(int defaultSize_x, int defaultSize_y){
 		super();
 		
+		expectedDataName = "characterData" + Static.trialsPerNumber + "trials" + Static.groupPixelsWidth + "x" + Static.groupPixelsHeight + ".dat";
+		expectedWeightsDataName = "charges" + Static.numbOfInputNeurons+ "_" + Static.numbOfNeuronsPerHiddenLayer + "_" + Static.numberOfHiddenLayers + "_" + Static.numberOfOutputNeurons + ".dat";
+
+		
+		System.out.println("WHAT " + expectedWeightsDataName);
 		
 		characterData = new TrialMemory[10];
 		for(int i = 0; i < characterData.length; i++){
@@ -97,41 +105,40 @@ public class CustomFrame extends JFrame{
 		
 		//NOTE: neural network stats here.
 		
-		int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-		int numbOfNeuronsPerHiddenLayer = Static.groupPixelsWidth * Static.groupPixelsHeight * 2;  //same? double it? unsure.
-		
-		net = new NeuralNetwork(numbOfInputNeurons, numbOfNeuronsPerHiddenLayer, 1, 10);
 		
 		
-		if(new File("memory/characterData.dat").exists() ){
+		
+		net = new NeuralNetwork(Static.numbOfInputNeurons, Static.numbOfNeuronsPerHiddenLayer, Static.numberOfHiddenLayers, Static.numberOfOutputNeurons, true);
+		
+		
+		
+		
+		switch(Static.loadMode){
+		case NOTHING:
+			startWithTrial = true;
 			
-			startWithTrial = false;
-		
-			try {
-				FileInputStream fileIn = new FileInputStream("memory/characterData.dat");
-				ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-				characterData = (TrialMemory[]) objectIn.readObject();
-				objectIn.close();
-			}catch(Exception e){
-				e.printStackTrace();
+		break;
+		case LOADTRIALS:
+			attemptLoadTrials();
+			
+			if(loadedSomething == true){
+				//TODO: Train the neural network with the "characterData":
+				net.clear();
+				net.train(characterData, Static.timesToTrainEach);
 			}
 			
-			//TODO: Train the neural network with the "characterData":
-			net.clear();
-			net.train(characterData);
+			writeNeuralNetworkWeights();
 			
-		}else{
-			startWithTrial = true;
-			//Let the user give samples, if none exist to train the network with.
+		break;
+		case LOADWEIGHTS:
+			
+			attemptLoadTrials();
+			
+			
+			attemptLoadCharges();
+			
+		break;
 		}
-		   
-		   
-		
-		
-		
-
-		
-		
 		
 		
 		
@@ -216,7 +223,7 @@ public class CustomFrame extends JFrame{
 		
 		
 		
-		if(Static.debugTestLoadImage){
+		if(loadedSomething && Static.debugTestLoadImage){
 			
 			
 			for(int i = 0; i < characterData.length; i++){
@@ -233,14 +240,10 @@ public class CustomFrame extends JFrame{
 				}
 			}
 			
-			
-			
 		}//END OF if(Static.debugTestLoadImage)
 		
 		
 	}//END OF CustomFrame(...) constructor
-	
-	
 	
 	
 	
@@ -472,34 +475,19 @@ public class CustomFrame extends JFrame{
 					//TODO Plug all "characterData.trialMem" 's  into
 					//the neural network?
 					
-					try {
-						File f = new File("memory");
-						if(f.exists() == false){
-							f.mkdirs();
-						}
-						
-						//System.out.println("NULL?! " + characterData[0].trialMem[0]);
-						
-						FileOutputStream fileOut = new FileOutputStream("memory/characterData.dat");
-						ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
-						System.out.println("CHECK1");
-						objectOut.writeObject(characterData);
-						System.out.println("CHECK2");
-						objectOut.close();
-						fileOut.close();
-					}
-					catch(Exception e){
-						e.printStackTrace();
-					}
+					//if(Static.loadMode != NOTHING){
 					
-					net.clear();
-					net.train(characterData);
+						writeTrials();
+						
+						net.clear();
+						net.train(characterData, Static.timesToTrainEach);
+						
+						writeNeuralNetworkWeights();
+						
+					//}
 					
 					
 					//AND.  Save either the trials OR the resulting neural network to a file.
-					
-					
-					
 					
 					setGUIUse();
 					
@@ -515,6 +503,117 @@ public class CustomFrame extends JFrame{
 		lblMessage.setText(currentInstructions);
 		
 	}//END OF setupTrial(...)
+	
+	
+	
+	
+	public void writeTrials(){
+		
+		File f = new File("memory");
+		if(f.exists() == false){
+			f.mkdirs();
+		}
+
+		try {
+			
+			//System.out.println("NULL?! " + characterData[0].trialMem[0]);
+			
+			FileOutputStream fileOut = new FileOutputStream("memory/" + expectedDataName);
+			ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+			System.out.println("CHECK1");
+			objectOut.writeObject(characterData);
+			System.out.println("CHECK2");
+			objectOut.close();
+			fileOut.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void writeNeuralNetworkWeights(){
+		
+
+		try {
+			
+			//System.out.println("NULL?! " + characterData[0].trialMem[0]);
+			
+			FileOutputStream fileOut = new FileOutputStream("memory/" + expectedWeightsDataName);
+			ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+			
+			net.writeWeights(objectOut);
+			
+			//System.out.println("CHECK1");
+			//objectOut.writeObject(characterData);
+			//System.out.println("CHECK2");
+			objectOut.close();
+			fileOut.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void attemptLoadTrials(){
+		
+
+		if(!Static.forceNoLoad && new File("memory/" + expectedDataName).exists() ){
+			
+			startWithTrial = false;
+			
+			try {
+				FileInputStream fileIn = new FileInputStream("memory/" + expectedDataName);
+				ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+				characterData = (TrialMemory[]) objectIn.readObject();
+				objectIn.close();
+				fileIn.close();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+			
+			loadedSomething = true;
+			
+		}else{
+			startWithTrial = true;
+			
+			//Let the user give samples, if none exist to train the network with.
+		}
+		
+	}
+	
+	
+	public void attemptLoadCharges(){
+		
+		if(!Static.forceNoLoad && new File("memory/" + expectedWeightsDataName).exists() ){
+			
+			startWithTrial = false;
+			
+			
+			try {
+				FileInputStream fileIn = new FileInputStream("memory/" + expectedWeightsDataName);
+				
+				System.out.println("DO YOU LOAD CHARGES");
+				ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+				net.loadWeights(objectIn);
+				
+				//characterData = (TrialMemory[]) objectIn.readObject();
+				
+				objectIn.close();
+				fileIn.close();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+
+			
+		}else{
+			startWithTrial = true;
+		}
+		
+		
+	}
 	
 	
 	String pluralize(int quantity, String notPlural, String plural){
@@ -630,6 +729,7 @@ public class CustomFrame extends JFrame{
 		
 		int guessNumb = net.attemptTrial(thisSample);
 		
+		System.out.println("WHUT " + guessNumb);
 		
 		txtOutput.setText( txtOutput.getText() + guessNumb );
 		

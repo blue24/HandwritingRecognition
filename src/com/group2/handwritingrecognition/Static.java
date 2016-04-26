@@ -8,14 +8,29 @@ import javax.swing.JComponent;
 
 public class Static {
 	
+	public enum LoadMode{
+		NOTHING, LOADTRIALS, LOADWEIGHTS
+		
+		
+	}
+	
+	
 	//DEBUG PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
-	static int groupPixelsWidth = 16;
-	static int groupPixelsHeight = 24;
+	static int groupPixelsWidth = 12;
+	static int groupPixelsHeight = 18;
 	
+	static int boundsMinimumWidth = 20;
+	static int boundsMinimumHeight = 30;
 
+	static float boundsRatioMin = 0.45f;  //how tall can I be?
+	static float boundsRatioMax = 1.8f;    //how short can I be?
+	
+	//note: less is taller, value 0 is infinitely tall (no width),
+	//value 1 is square,
+	//value "infinity" is infinitely long (no height).
 	
 	//was 0.5?
 	static float learningRateMax = 0.90f;
@@ -23,12 +38,12 @@ public class Static {
 	
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-	static int numbOfNeuronsPerHiddenLayer = 22;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 15;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
 	
 
-	static int timesToTrainEach = 2500;
+	static int timesToTrainEach = 2000;
 	
 	static boolean forceNoLoad = false;
 	
@@ -42,14 +57,6 @@ public class Static {
 	
 	static LoadMode loadMode = LoadMode.LOADWEIGHTS;
 			
-			
-	public enum LoadMode{
-		NOTHING, LOADTRIALS, LOADWEIGHTS
-		
-		
-	}
-
-	
 	
 	/*
 	These two conditions are used to tell whether a sector (one of the 16ths, as of yet)
@@ -67,7 +74,7 @@ public class Static {
 	static int trialsPerNumber = 20;
 	
 	//Draw debug-things (the bounding rect of a number, sector-divisions, etc.)
-	static boolean drawDebug = true;
+	static boolean drawDebug = false;
 	
 	//By what factor will the bounded region be split?  Default is groups of 16x16.
 	
@@ -83,8 +90,6 @@ public class Static {
 	static Color clrBlack = new Color(0, 0, 0);
 	static Color clrRed = new Color(255, 0, 0);
 	static Color clrGreen = new Color(0, 255, 0);
-	
-	
 	
 	
 	

@@ -24,6 +24,7 @@ public class DrawablePanel extends JPanel {
 	int pixelsHeight;
 	
 	
+	
 
 	boolean[][] groupPixels;
 	
@@ -41,6 +42,9 @@ public class DrawablePanel extends JPanel {
 	int pixelDrawMaxY = Integer.MIN_VALUE;
 	int pixelDrawMinX = Integer.MAX_VALUE;
 	int pixelDrawMaxX = Integer.MIN_VALUE;
+	
+	float extraPixelDrawXPadding = 0;
+	float extraPixelDrawYPadding = 0;
 	
 	
 	//A reference back to the window.
@@ -253,8 +257,15 @@ public class DrawablePanel extends JPanel {
 		if(Static.drawDebug){
 			drawSectors(g);
 			
+			
+			int toDrawX1 = (int)(pixelDrawMinX - extraPixelDrawXPadding);
+			int toDrawX2 = (int)(pixelDrawMaxX + extraPixelDrawXPadding);
+			int toDrawY1 = (int)(pixelDrawMinY - extraPixelDrawYPadding);
+			int toDrawY2 = (int)(pixelDrawMaxY + extraPixelDrawYPadding);
+			
+			
 			g.setColor(Static.clrRed);
-			drawSquare(g, pixelDrawMinX, pixelDrawMinY, pixelDrawMaxX, pixelDrawMaxY);
+			drawSquare(g, toDrawX1, toDrawY1, toDrawX2, toDrawY2);
 		}
 		
 		
@@ -306,6 +317,21 @@ public class DrawablePanel extends JPanel {
 	void drawSquare(Graphics g, int x1, int y1, int x2, int y2){
 		
 		
+
+		if(x1 < 0){
+			x1 = 0;
+		}
+		if(x2 >= pixelsWidth){
+			x2 = pixelsWidth-1;
+		}
+		
+		if(y1 < 0){
+			y1 = 0;
+		}
+		if(y2 >= pixelsHeight){
+			y2 = pixelsHeight-1;
+		}
+		
 		
 		g.drawLine(x1, y1, x2, y1);
 		g.drawLine(x1, y2, x2, y2);
@@ -317,6 +343,15 @@ public class DrawablePanel extends JPanel {
 	}
 	
 	
+	boolean boundsCheck(int x, int y){
+		if(x >= 0 && y >= 0 && x < pixelsWidth && y < pixelsHeight){
+			return true;
+		}else{
+			return false;
+		}
+		
+	}
+	
 	void drawSectors(Graphics g){
 		
 		
@@ -326,8 +361,12 @@ public class DrawablePanel extends JPanel {
 		}
 		
 
-		int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
-		int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
+		int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX + (int)(extraPixelDrawXPadding * 2);
+		int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY + (int)(extraPixelDrawYPadding * 2);
+		
+		int leftStart = (int)(pixelDrawMinX - extraPixelDrawXPadding);
+		int topStart = (int)(pixelDrawMinY - extraPixelDrawYPadding);
+		
 		
 		
 		float sectorWidth = ((float)usedBoundsWidth / (float)Static.groupPixelsWidth);
@@ -353,10 +392,10 @@ public class DrawablePanel extends JPanel {
 				for(int y = 0; y < sectorHeight; y++){
 					for(int x = 0; x < sectorWidth; x++){
 						
-						int trueX = pixelDrawMinX + (int) (gX*sectorWidth) + x;
-						int trueY = pixelDrawMinY + (int) (gY*sectorHeight) + y;
+						int trueX = leftStart + (int) (gX*sectorWidth) + x;
+						int trueY = topStart + (int) (gY*sectorHeight) + y;
 						
-						if(pixels[trueY][trueX] == true){
+						if(boundsCheck(trueX, trueY) && pixels[trueY][trueX] == true){
 							drawnPixels++;
 						}else{
 							blankPixels++;
@@ -366,8 +405,8 @@ public class DrawablePanel extends JPanel {
 				}
 				
 				
-				int offX = pixelDrawMinX + (int)(gX*sectorWidth);
-				int offY = pixelDrawMinY + (int)(gY*sectorHeight);
+				int offX = leftStart + (int)(gX*sectorWidth);
+				int offY = topStart + (int)(gY*sectorHeight);
 				
 				g.setColor(Static.clrGreen);
 				drawSquare(g, offX, offY, offX + (int)sectorWidth, offY + (int)sectorHeight);
@@ -427,10 +466,12 @@ public class DrawablePanel extends JPanel {
 		if(drawnYet){
 			groupPixels = new boolean[Static.groupPixelsHeight][Static.groupPixelsWidth];
 
+
+			int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX + (int)(extraPixelDrawXPadding * 2);
+			int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY + (int)(extraPixelDrawYPadding * 2);
 			
-			
-			int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
-			int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
+			int leftStart = (int)(pixelDrawMinX - extraPixelDrawXPadding);
+			int topStart = (int)(pixelDrawMinY - extraPixelDrawYPadding);
 			
 			
 			float sectorWidth = ((float)usedBoundsWidth / (float)Static.groupPixelsWidth);
@@ -448,10 +489,10 @@ public class DrawablePanel extends JPanel {
 					for(int y = 0; y < sectorHeight; y++){
 						for(int x = 0; x < sectorWidth; x++){
 							
-							int trueX = pixelDrawMinX + (int) (gX*sectorWidth) + x;
-							int trueY = pixelDrawMinY + (int) (gY*sectorHeight) + y;
+							int trueX = leftStart + (int) (gX*sectorWidth) + x;
+							int trueY = topStart + (int) (gY*sectorHeight) + y;
 							
-							if(pixels[trueY][trueX] == true){
+							if(boundsCheck(trueX, trueY) && pixels[trueY][trueX] == true){
 								drawnPixels++;
 							}else{
 								blankPixels++;
@@ -475,6 +516,7 @@ public class DrawablePanel extends JPanel {
 			
 
 			this.repaint();
+			
 			
 			return groupPixels;
 		}else{
@@ -574,6 +616,48 @@ public class DrawablePanel extends JPanel {
 			pixelDrawMaxY = pointFurthestDown;
 		}
 		
+		
+		int currentBoundsWidth = pixelDrawMaxX - pixelDrawMinX;
+		if(currentBoundsWidth < Static.boundsMinimumWidth){
+			extraPixelDrawXPadding = (Static.boundsMinimumWidth - currentBoundsWidth) / 2f;
+			//pixelDrawMinX -= (Static.boundsMinimumWidth - currentBoundsWidth) / 2;
+			//pixelDrawMaxX += (Static.boundsMinimumWidth - currentBoundsWidth) / 2;
+			
+			
+		}else{
+			extraPixelDrawXPadding = 0;
+		}
+		int currentBoundsHeight = pixelDrawMaxY - pixelDrawMinY;
+		if(currentBoundsHeight < Static.boundsMinimumHeight){
+			extraPixelDrawYPadding = (Static.boundsMinimumHeight - currentBoundsHeight) / 2f;
+		}else{
+			extraPixelDrawYPadding = 0;
+		}
+		
+		int targetWidth = (pixelDrawMaxX - pixelDrawMinX) + (int)(2 * extraPixelDrawXPadding);
+		int targetHeight = (pixelDrawMaxY - pixelDrawMinY) + (int)(2 * extraPixelDrawYPadding);
+		
+		
+		if((float)targetWidth / (float)targetHeight < Static.boundsRatioMin){
+			//Too tall!  Increase the width to make this ratio acceptable.
+			float newWidth = Static.boundsRatioMin * targetHeight;
+			
+			extraPixelDrawXPadding = (newWidth - (pixelDrawMaxX - pixelDrawMinX) )/2;
+			
+		}else if((float)targetWidth / (float)targetHeight > Static.boundsRatioMax){
+			//Too long! Increase the height to make this ratio acceptable.
+			float newHeight = targetWidth / Static.boundsRatioMax;
+			extraPixelDrawYPadding = (newHeight - (pixelDrawMaxY - pixelDrawMinY) )/2;
+		}
+		
+		
+		targetWidth = (pixelDrawMaxX - pixelDrawMinX) + (int)(2 * extraPixelDrawXPadding);
+		targetHeight = (pixelDrawMaxY - pixelDrawMinY) + (int)(2 * extraPixelDrawYPadding);
+		
+		
+		
+		System.out.println("SIZE : " + targetWidth + " " + targetHeight);
+		System.out.println("RATIO IS " + ((float)targetWidth / (float)targetHeight)  );
 		
 		
 		

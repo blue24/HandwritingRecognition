@@ -44,7 +44,7 @@ public class CustomFrame extends JFrame{
 	
 	
 	
-	public boolean startWithTrial = true;
+	public boolean startWithTrial = false;
 
 	
 	public TextField txtOutput;
@@ -136,6 +136,8 @@ public class CustomFrame extends JFrame{
 			
 			
 			attemptLoadCharges();
+			
+			
 			
 		break;
 		}
@@ -233,8 +235,9 @@ public class CustomFrame extends JFrame{
 							int modx = i * 32;
 							int mody = i2 * 32;
 							
-							this.drawSubPan.pixels[y + mody][x + modx] = characterData[i].trialMem[i2][y][x];
-								
+							if(y + mody < drawSubPan.pixelsHeight && x + modx < drawSubPan.pixelsWidth){
+								this.drawSubPan.pixels[y + mody][x + modx] = characterData[i].trialMem[i2][y][x];
+							}
 						}		
 					}
 				}
@@ -561,7 +564,7 @@ public class CustomFrame extends JFrame{
 
 		if(!Static.forceNoLoad && new File("memory/" + expectedDataName).exists() ){
 			
-			startWithTrial = false;
+			//startWithTrial = false;
 			
 			try {
 				FileInputStream fileIn = new FileInputStream("memory/" + expectedDataName);
@@ -572,7 +575,6 @@ public class CustomFrame extends JFrame{
 			}catch(Exception e){
 				e.printStackTrace();
 			}
-			
 			
 			loadedSomething = true;
 			
@@ -587,9 +589,11 @@ public class CustomFrame extends JFrame{
 	
 	public void attemptLoadCharges(){
 		
+		System.out.println("WHATTTTT " + expectedWeightsDataName);
 		if(!Static.forceNoLoad && new File("memory/" + expectedWeightsDataName).exists() ){
 			
-			startWithTrial = false;
+			System.out.println("FOUND CHARGES");
+			//startWithTrial = false;
 			
 			
 			try {
@@ -606,10 +610,21 @@ public class CustomFrame extends JFrame{
 			}catch(Exception e){
 				e.printStackTrace();
 			}
-
+			
 			
 		}else{
-			startWithTrial = true;
+			System.out.println("DID NOT FIND CHARGES");
+			
+			
+			if(loadedSomething){
+				
+				net.clear();
+				net.train(characterData, Static.timesToTrainEach);
+				writeNeuralNetworkWeights();
+			}
+			
+			//startWithTrial = true;
+			//no, just train.
 		}
 		
 		

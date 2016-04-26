@@ -12,16 +12,23 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
-	static int groupPixelsWidth = 14;
-	static int groupPixelsHeight = 14;
+	static int groupPixelsWidth = 16;
+	static int groupPixelsHeight = 24;
+	
+
+	
+	//was 0.5?
+	static float learningRateMax = 0.90f;
+	static float learningRateMin = 0.30f;
 	
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-	static int numbOfNeuronsPerHiddenLayer = Static.groupPixelsWidth * Static.groupPixelsHeight / 10;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 22;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
 	
-	
+
+	static int timesToTrainEach = 2500;
 	
 	static boolean forceNoLoad = false;
 	
@@ -43,7 +50,6 @@ public class Static {
 	}
 
 	
-	static int timesToTrainEach = 3000;
 	
 	/*
 	These two conditions are used to tell whether a sector (one of the 16ths, as of yet)
@@ -58,7 +64,7 @@ public class Static {
 	static boolean trialAdvancingOff = false;
 
 	//How many trials for each number?
-	static int trialsPerNumber = 10;
+	static int trialsPerNumber = 20;
 	
 	//Draw debug-things (the bounding rect of a number, sector-divisions, etc.)
 	static boolean drawDebug = true;

@@ -164,14 +164,31 @@ public class NeuralNetwork {
 	//Just sends each character's trial to be treated as neural network input, with an answer in mind (i, which is 0, 1, 2, 3, ...)
 	void train(TrialMemory[] characterData, int timesToTrain){
 		
+		float learningRateDelta = Static.learningRateMax - Static.learningRateMin;
+		
+
+		//learning rate starts maxed out.
+		//learningRateToUse = Static.learningRateMax;
+		
+		int trainDivisor = timesToTrain-1;
+		
+		if(trainDivisor <= 0){
+			trainDivisor = 1;
+		}
 		
 		
 		for(int i3 = 0; i3 < timesToTrain; i3++){
+			
+			learningRateToUse = Static.learningRateMin + ( (1 - ((float)Math.sqrt( i3 / (trainDivisor) ) ) ) * (learningRateDelta));
+			
 			
 			for(int i = 0; i < characterData.length; i++){
 				
 				for(int i2 = 0; i2 < characterData[i].trialMem.length; i2++){
 					
+					
+					//int y = (int) ( (1 - (Math.pow(i/500f, 1/3f) )) * 500);
+					//This makes the learningRate depend on 
 					
 					trainWithTrial(characterData[i].trialMem[i2], i);
 					
@@ -224,7 +241,7 @@ public class NeuralNetwork {
 	
 	
 	
-	
+	float learningRateToUse = 0;
 	
 	//TODO
 	void sendTrialToInputNeurons(boolean[][] thisTrial){
@@ -368,14 +385,11 @@ public class NeuralNetwork {
 	
 	
 	
-	//was 0.5?
-	float learningRate = 0.35f;
 	
 	
 	
 	
-	
-	int times = 100;
+	int times = 30;
 	
 	//Train.
 	void train( ){
@@ -383,7 +397,7 @@ public class NeuralNetwork {
 		feedForward();
 		
 		if(times > 0 && trainingWithNumber == 0){
-			System.out.printf("WAT IS IT %f\n", totalOutputChargeError);
+			System.out.printf("WHAT IS IT %f\n", totalOutputChargeError);
 			
 			for(int i = 0; i < outputLayer.neurons.size(); i++){
 				System.out.printf("ECK %d %f %f\n", i, outputLayer.neurons.get(i).outputChargeError, outputLayer.neurons.get(i).outputCharge);
@@ -615,13 +629,6 @@ public class NeuralNetwork {
 			}//END OF for(int i = 0...)
 		}
 		
-		public void determineMyChargeDerivativesWRTIncomingConnections222(){
-			int neuronsInLayer = neurons.size();
-			for(int i = 0; i < neuronsInLayer; i++){
-				neurons.get(i).determineMyChargeDerivativeWRTIncomingConnections222();
-			}//END OF for(int i = 0...)
-		}
-		
 		
 		public void determineTotalErrorDerivativesWRTOutputCharge(){
 			int neuronsInLayer = neurons.size();
@@ -817,36 +824,12 @@ public class NeuralNetwork {
 			//System.out.println("DDD " + totalErrorDerivativeWRTOutputCharge + " " + outputChargeDerivativeWRTCharge + " " + incoming.destinationChargeWRTWeight);
 			//System.out.println("SO WHAT " + incoming.totalErrorWRTWeight);
 			
-			incoming.modifiedWeight = incoming.weight - learningRate * incoming.totalErrorWRTWeight;
+			incoming.modifiedWeight = incoming.weight - learningRateToUse * incoming.totalErrorWRTWeight;
 			//System.out.println("LERNIN " + incoming.modifiedWeight);
 		}
 		
 		
 		
-		public void determineMyChargeDerivativeWRTIncomingConnections222(){
-			
-			for(int i = 0; i < connectionsIn.size(); i++){
-				Connection c = connectionsIn.get(i);
-				
-				//Only do this for non-bias nodes.
-				if(c.neuronFrom.isBias == false){
-					determineMyChargeDerivativeWRTIncomingConnection222(c);
-				}
-				
-			}
-			
-		}
-		
-		public void determineMyChargeDerivativeWRTIncomingConnection222(Connection incoming){
-			incoming.destinationChargeWRTWeight = incoming.neuronFrom.outputCharge;
-			incoming.totalErrorWRTWeight = totalErrorDerivativeWRTOutputCharge * outputChargeDerivativeWRTCharge * incoming.destinationChargeWRTWeight;
-			
-			//System.out.println("DDD " + totalErrorDerivativeWRTOutputCharge + " " + outputChargeDerivativeWRTCharge + " " + incoming.destinationChargeWRTWeight);
-			//System.out.println("SO WHAT " + incoming.totalErrorWRTWeight);
-			
-			incoming.modifiedWeight = incoming.weight - learningRate * incoming.totalErrorWRTWeight;
-			//System.out.println("LERNIN " + incoming.modifiedWeight);
-		}
 		
 		
 		public void determineTotalErrorDerivativeWRTOutputCharge(){

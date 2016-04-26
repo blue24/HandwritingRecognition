@@ -33,17 +33,17 @@ public class Static {
 	//value "infinity" is infinitely long (no height).
 	
 	//was 0.5?
-	static float learningRateMax = 0.90f;
-	static float learningRateMin = 0.30f;
+	static float learningRateMax = 0.95f;
+	static float learningRateMin = 0.25f;
 	
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-	static int numbOfNeuronsPerHiddenLayer = 15;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 18;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
 	
 
-	static int timesToTrainEach = 2000;
+	static int timesToTrainEach = 1600;
 	
 	static boolean forceNoLoad = false;
 	
@@ -74,7 +74,7 @@ public class Static {
 	static int trialsPerNumber = 20;
 	
 	//Draw debug-things (the bounding rect of a number, sector-divisions, etc.)
-	static boolean drawDebug = false;
+	static boolean drawDebug = true;
 	
 	//By what factor will the bounded region be split?  Default is groups of 16x16.
 	

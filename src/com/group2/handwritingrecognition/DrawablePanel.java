@@ -24,6 +24,11 @@ public class DrawablePanel extends JPanel {
 	int pixelsHeight;
 	
 	
+	int totalTrials = 0;
+	//String loadBarTrialsText = "";
+	int trialsDone = 0;
+	boolean currentlyTraining = false;
+	
 	
 
 	boolean[][] groupPixels;
@@ -60,12 +65,12 @@ public class DrawablePanel extends JPanel {
 		
 			int testWidth = getWidth();
 			int testHeight = getHeight();
-			
 			if(testWidth != pixelsWidth || testHeight != pixelsHeight){
 				//Resize the pixels array.
 				
-				
 
+				System.out.println("PIXELS RESIZED");
+				
 				
 				boolean[][] newPixels = new boolean[testHeight][testWidth];
 				
@@ -107,39 +112,14 @@ public class DrawablePanel extends JPanel {
 	}
 	
 	
-	
-	
-	
+	boolean endPaintUpdate = false;
+	Thread paintUpdate;
 	
 	public DrawablePanel(CustomFrame arg_frameRef){
 		super();
 		
 		frameRef = arg_frameRef;
 		
-		/*
-		Thread thr = new Thread(){
-			
-			@Override
-			public void run(){
-				
-				while(true){
-					
-					if(shouldRepaint){
-						NEVER MIND
-					}
-					
-					try {
-						Thread.sleep(17);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					
-				}
-				
-			}
-		};
-		thr.start();
-		*/
 		
 		
 		
@@ -236,11 +216,62 @@ public class DrawablePanel extends JPanel {
 	
 	
 	
+	public void startPaintUpdateThread(){
+		paintUpdate = new Thread(){
+			@Override
+			public void run(){
+				
+				while(!endPaintUpdate){
+					
+					repaint();
+					try {
+						Thread.sleep(17);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+				}
+				
+			}
+		};
+		paintUpdate.start();
+	}
+	
+	
 	@Override
 	public void paint(Graphics g){
 		g.setColor(Static.clrWhite);
 		//g.drawLine(0,  0,  15,  15);
 		g.fillRect(0, 0, getWidth(), getHeight());
+		
+		
+		if(currentlyTraining){
+			
+			int loadBarWidth = 250;
+			int loadBarHeight = 36;
+			
+			int loadBarStartX = (getWidth() - loadBarWidth) / 2 ;
+			int loadBarStartY = (getHeight() - loadBarHeight) / 2;
+			
+			g.setColor(Static.clrRed);
+			g.fillRect(loadBarStartX, loadBarStartY, loadBarWidth, loadBarHeight);
+			
+			
+			
+			g.setColor(Static.clrGreen);
+			int loadBarDoneWidth = (int) ( ((float)trialsDone / (float)totalTrials) * (loadBarWidth-6)  ) ;
+			g.fillRect(loadBarStartX + 3, loadBarStartY + 3, loadBarDoneWidth, loadBarHeight-6);
+			
+			
+			
+			g.setColor(Static.clrWhite);
+			g.drawString("Trials done: " + trialsDone + " / " + totalTrials , loadBarStartX + 40, loadBarStartY + 20);
+			
+			
+			return;
+		}
+		
+		
 		
 		g.setColor(Static.clrBlack);
 		if(pixels != null){
@@ -656,8 +687,8 @@ public class DrawablePanel extends JPanel {
 		
 		
 		
-		System.out.println("SIZE : " + targetWidth + " " + targetHeight);
-		System.out.println("RATIO IS " + ((float)targetWidth / (float)targetHeight)  );
+		//System.out.println("SIZE : " + targetWidth + " " + targetHeight);
+		//System.out.println("RATIO IS " + ((float)targetWidth / (float)targetHeight)  );
 		
 		
 		

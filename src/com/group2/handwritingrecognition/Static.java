@@ -19,6 +19,11 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
+	
+	
+	
+	
+	
 	static int groupPixelsWidth = 12;
 	static int groupPixelsHeight = 18;
 	
@@ -27,23 +32,29 @@ public class Static {
 
 	static float boundsRatioMin = 0.45f;  //how tall can I be?
 	static float boundsRatioMax = 1.8f;    //how short can I be?
-	
 	//note: less is taller, value 0 is infinitely tall (no width),
 	//value 1 is square,
 	//value "infinity" is infinitely long (no height).
 	
+	
+	
+
+	//How many trials for each number?
+	static int trialsPerNumber = 20;
+	
 	//was 0.5?
-	static float learningRateMax = 0.95f;
-	static float learningRateMin = 0.25f;
+	static float learningRateMax = 0.65f;
+	static float learningRateMin = 0.15f;
+	
+	static int timesToTrainEach = 2000;
 	
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-	static int numbOfNeuronsPerHiddenLayer = 18;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
 	
 
-	static int timesToTrainEach = 1600;
 	
 	static boolean forceNoLoad = false;
 	
@@ -70,8 +81,6 @@ public class Static {
 	//If turned off, trials will not progress the state.  Debugging only.
 	static boolean trialAdvancingOff = false;
 
-	//How many trials for each number?
-	static int trialsPerNumber = 20;
 	
 	//Draw debug-things (the bounding rect of a number, sector-divisions, etc.)
 	static boolean drawDebug = true;
@@ -82,6 +91,7 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
+	
 	
 	static GridBagConstraints gbc = new GridBagConstraints();
 	

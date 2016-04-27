@@ -13,6 +13,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -41,6 +43,9 @@ public class CustomFrame extends JFrame{
 	
 	public CustomPanel pan;
 	public DrawablePanel drawSubPan;
+	
+	
+	public Thread trainingThread;
 	
 	
 	
@@ -89,8 +94,59 @@ public class CustomFrame extends JFrame{
 	boolean loadedSomething = false;
 	
 	
+	
+	void interruptWithTrainingThread(){
+		trainingThread = new Thread(){
+			@Override
+			public void run(){
+				net.clear();
+				net.train(characterData, Static.timesToTrainEach);
+				
+				writeNeuralNetworkWeights();
+				setGUIUse();
+				
+			}
+		};
+		trainingThread.run();
+	}
+	
+	void startTrainingThread(){
+		trainingThread = new Thread(){
+			@Override
+			public void run(){
+				net.clear();
+				net.train(characterData, Static.timesToTrainEach);
+				
+				writeNeuralNetworkWeights();
+				setGUIUse();
+				
+			}
+		};
+		trainingThread.start();
+	}
+	
+	
+	
+	
 	public CustomFrame(int defaultSize_x, int defaultSize_y){
 		super();
+		
+		
+		drawSubPan = new DrawablePanel(this);
+		drawSubPan.setPreferredSize(new Dimension(500, 150) );
+		
+		
+		//credit to
+		//http://stackoverflow.com/questions/1984195/close-window-event-in-java
+		this.addWindowListener(new WindowAdapter(){
+	        public void windowClosing(WindowEvent e){
+	        	drawSubPan.endPaintUpdate = true;
+	        	//cancel that thread, if it is still running.
+	        }
+	    });
+		
+		
+		
 		
 		expectedDataName = "characterData" + Static.trialsPerNumber + "trials" + Static.groupPixelsWidth + "x" + Static.groupPixelsHeight + ".dat";
 		expectedWeightsDataName = "charges" + Static.numbOfInputNeurons+ "_" + Static.numbOfNeuronsPerHiddenLayer + "_" + Static.numberOfHiddenLayers + "_" + Static.numberOfOutputNeurons + ".dat";
@@ -108,39 +164,9 @@ public class CustomFrame extends JFrame{
 		
 		
 		
-		net = new NeuralNetwork(Static.numbOfInputNeurons, Static.numbOfNeuronsPerHiddenLayer, Static.numberOfHiddenLayers, Static.numberOfOutputNeurons, true);
+		net = new NeuralNetwork(Static.numbOfInputNeurons, Static.numbOfNeuronsPerHiddenLayer, Static.numberOfHiddenLayers, Static.numberOfOutputNeurons, true, drawSubPan);
 		
 		
-		
-		
-		switch(Static.loadMode){
-		case NOTHING:
-			startWithTrial = true;
-			
-		break;
-		case LOADTRIALS:
-			attemptLoadTrials();
-			
-			if(loadedSomething == true){
-				//TODO: Train the neural network with the "characterData":
-				net.clear();
-				net.train(characterData, Static.timesToTrainEach);
-			}
-			
-			writeNeuralNetworkWeights();
-			
-		break;
-		case LOADWEIGHTS:
-			
-			attemptLoadTrials();
-			
-			
-			attemptLoadCharges();
-			
-			
-			
-		break;
-		}
 		
 		
 		
@@ -195,9 +221,6 @@ public class CustomFrame extends JFrame{
 		//add(pan);
 		
 		
-		drawSubPan = new DrawablePanel(this);
-		drawSubPan.setPreferredSize(new Dimension(500, 150) );
-		
 		
 		
 		this.getContentPane().add(pan);
@@ -207,13 +230,6 @@ public class CustomFrame extends JFrame{
 		
 		
 		
-		if(startWithTrial){
-			setGUITrial();
-		}else{
-			setGUIUse();
-		}
-		//setGUITrial();
-		
 		//setGUIUse();
 		
 		
@@ -222,6 +238,54 @@ public class CustomFrame extends JFrame{
 		//this.setPreferredSize(new Dimension(800, 600));
 		
 		this.setVisible(true);
+		
+		
+		
+		
+		
+		setGUIBlank();
+		
+
+		
+		
+		switch(Static.loadMode){
+		case NOTHING:
+			startWithTrial = true;
+			
+		break;
+		case LOADTRIALS:
+			attemptLoadTrials();
+			
+			if(loadedSomething == true){
+				//TODO: Train the neural network with the "characterData":
+				
+				interruptWithTrainingThread();
+				//net.clear();
+				//net.train(characterData, Static.timesToTrainEach);
+			}
+			
+			
+		break;
+		case LOADWEIGHTS:
+			
+			attemptLoadTrials();
+			
+			
+			attemptLoadCharges();
+			
+			
+			
+		break;
+		}
+		
+
+		
+		if(startWithTrial){
+			setGUITrial();
+		}else{
+			setGUIUse();
+		}
+		//setGUITrial();
 		
 		
 		
@@ -248,6 +312,20 @@ public class CustomFrame extends JFrame{
 		
 	}//END OF CustomFrame(...) constructor
 	
+	
+	
+
+	void setGUIBlank(){
+		
+		clearGUI();
+		
+		//pan.add(drawSubPan); 
+		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 1, 1, 0.7,  1.0, 0, 0, pan, drawSubPan);
+		this.pack();
+		
+		drawSubPan.createPixelsArray();
+		
+	}
 	
 	
 	void setGUITrial(){
@@ -482,17 +560,16 @@ public class CustomFrame extends JFrame{
 					
 						writeTrials();
 						
-						net.clear();
-						net.train(characterData, Static.timesToTrainEach);
 						
-						writeNeuralNetworkWeights();
+						setGUIBlank();
+						startTrainingThread();
+						
+						
 						
 					//}
 					
 					
-					//AND.  Save either the trials OR the resulting neural network to a file.
 					
-					setGUIUse();
 					
 					return;
 					
@@ -589,7 +666,7 @@ public class CustomFrame extends JFrame{
 	
 	public void attemptLoadCharges(){
 		
-		System.out.println("WHATTTTT " + expectedWeightsDataName);
+		System.out.println("expected name " + expectedWeightsDataName);
 		if(!Static.forceNoLoad && new File("memory/" + expectedWeightsDataName).exists() ){
 			
 			System.out.println("FOUND CHARGES");
@@ -599,7 +676,7 @@ public class CustomFrame extends JFrame{
 			try {
 				FileInputStream fileIn = new FileInputStream("memory/" + expectedWeightsDataName);
 				
-				System.out.println("DO YOU LOAD CHARGES");
+				System.out.println("Load charges?");
 				ObjectInputStream objectIn = new ObjectInputStream(fileIn);
 				net.loadWeights(objectIn);
 				
@@ -618,9 +695,7 @@ public class CustomFrame extends JFrame{
 			
 			if(loadedSomething){
 				
-				net.clear();
-				net.train(characterData, Static.timesToTrainEach);
-				writeNeuralNetworkWeights();
+				interruptWithTrainingThread();
 			}
 			
 			//startWithTrial = true;

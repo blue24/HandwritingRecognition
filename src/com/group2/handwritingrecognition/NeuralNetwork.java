@@ -19,6 +19,8 @@ public class NeuralNetwork {
 	int numberOfHiddenNeuronLayers;
 	int numberOfOutputNeurons;
 	
+	DrawablePanel drawablePanelRef;
+	
 	
 	public synchronized void writeWeights(java.io.ObjectOutputStream stream) throws IOException {
 		//stream.defaultWriteObject( );
@@ -110,12 +112,13 @@ public class NeuralNetwork {
 	
 	
 	//Here are some inputs for the network.  You may force them here or adjust them in CustomFrame's constructor, which creates the network.
-	public NeuralNetwork(int arg_numberOfInputNeurons, int arg_numberOfNeuronsPerHiddenLayer, int arg_numberOfHiddenNeuronLayers, int arg_numberOfOutputNeurons, boolean inputHasBias ){
+	public NeuralNetwork(int arg_numberOfInputNeurons, int arg_numberOfNeuronsPerHiddenLayer, int arg_numberOfHiddenNeuronLayers, int arg_numberOfOutputNeurons, boolean inputHasBias, DrawablePanel arg_drawablePanelRef ){
 		numberOfInputNeurons = arg_numberOfInputNeurons;
 		numberOfNeuronsPerHiddenLayer = arg_numberOfNeuronsPerHiddenLayer;
 		numberOfHiddenNeuronLayers = arg_numberOfHiddenNeuronLayers;
 		numberOfOutputNeurons = arg_numberOfOutputNeurons;
 		
+		drawablePanelRef = arg_drawablePanelRef;
 
 		int nodesInInput = numberOfInputNeurons;
 		
@@ -161,12 +164,20 @@ public class NeuralNetwork {
 		
 	}
 	
+	
+	int thisTrial = 0;
+	
 	//Just sends each character's trial to be treated as neural network input, with an answer in mind (i, which is 0, 1, 2, 3, ...)
 	void train(TrialMemory[] characterData, int timesToTrain){
 		
 		float learningRateDelta = Static.learningRateMax - Static.learningRateMin;
+			
 		
-
+		drawablePanelRef.currentlyTraining = true;
+		
+		drawablePanelRef.endPaintUpdate = false;
+		drawablePanelRef.startPaintUpdateThread();
+		
 		//learning rate starts maxed out.
 		//learningRateToUse = Static.learningRateMax;
 		
@@ -175,6 +186,10 @@ public class NeuralNetwork {
 		if(trainDivisor <= 0){
 			trainDivisor = 1;
 		}
+		
+		thisTrial = 0;
+		
+		drawablePanelRef.totalTrials = characterData.length * Static.trialsPerNumber * timesToTrain;
 		
 		
 		for(int i3 = 0; i3 < timesToTrain; i3++){
@@ -192,7 +207,8 @@ public class NeuralNetwork {
 					
 					trainWithTrial(characterData[i].trialMem[i2], i);
 					
-					
+					thisTrial++;
+					drawablePanelRef.trialsDone = thisTrial;
 					
 				}//END OF for(int i2 = 0...)
 				//break;
@@ -200,6 +216,9 @@ public class NeuralNetwork {
 			
 		}
 		
+		
+		drawablePanelRef.currentlyTraining = false;
+		drawablePanelRef.endPaintUpdate = true;
 		
 		System.out.println("RESULTS:::");
 		
@@ -397,10 +416,10 @@ public class NeuralNetwork {
 		feedForward();
 		
 		if(times > 0 && trainingWithNumber == 0){
-			System.out.printf("WHAT IS IT %f\n", totalOutputChargeError);
+			System.out.printf("OUTPUT ERROR %f\n", totalOutputChargeError);
 			
 			for(int i = 0; i < outputLayer.neurons.size(); i++){
-				System.out.printf("ECK %d %f %f\n", i, outputLayer.neurons.get(i).outputChargeError, outputLayer.neurons.get(i).outputCharge);
+				System.out.printf("TRIAL %d %f %f\n", i, outputLayer.neurons.get(i).outputChargeError, outputLayer.neurons.get(i).outputCharge);
 				
 			}
 			times--;

@@ -55,6 +55,10 @@ public class TrialMemory implements Serializable {
 		int length2 = stream.readInt();
 		int length3 = stream.readInt();
 		
+		Static.recentLoadedTrialLength1 = length1;
+		Static.recentLoadedTrialLength2 = length2;
+		Static.recentLoadedTrialLength3 = length3;
+		
 		//Static.trialsPerNumber
 		trialMem = new ArrayList<boolean[][]>();
 		

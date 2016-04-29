@@ -15,6 +15,7 @@ public class Static {
 		
 	}
 	
+	static String fileSep = System.getProperty("file.separator");
 	
 	//DEBUG PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////
@@ -23,10 +24,37 @@ public class Static {
 	
 	
 	
-	static boolean networkdNeedsTrainPrompt = false;
 	
+	//was 0.5?
+	static float learningRateMax = 0.45f;
+	static float learningRateMin = 0.18f;
+	
+	static int timesToTrainEach = 2200;
+	
+
 	static int groupPixelsWidth = 16;
 	static int groupPixelsHeight = 24;
+	
+	
+	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
+	
+	static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
+	//static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
+	static int numberOfHiddenLayers = 1;
+	static int numberOfOutputNeurons = 10;
+	
+
+	
+	
+	
+	
+	
+	
+	
+	//Prompt the user if a re-train is needed to accurately represent the current trials.
+	static boolean networkdNeedsTrainPrompt = false;
+	static boolean autoTrain = false;
+	
 	
 	static int boundsMinimumWidth = 20;
 	static int boundsMinimumHeight = 30;
@@ -37,28 +65,12 @@ public class Static {
 	//value 1 is square,
 	//value "infinity" is infinitely long (no height).
 	
-	
-	
-	static boolean autoTrain = false;
 
 	//How many trials for each number?
 	static int trialsPerNumber = 5;
 	
-	//was 0.5?
-	static float learningRateMax = 0.45f;
-	static float learningRateMin = 0.18f;
-	
-	static int timesToTrainEach = 2800;
-	
-	
-	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-	
-	static int numbOfNeuronsPerHiddenLayer = 100;  //same? double it? unsure.
-	//static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
-	static int numberOfHiddenLayers = 1;
-	static int numberOfOutputNeurons = 10;
-	
 
+	
 	
 	static boolean forceNoLoad = false;
 	
@@ -96,9 +108,14 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
+	static int recentLoadedTrialLength1;
+	static int recentLoadedTrialLength2;
+	static int recentLoadedTrialLength3;
+	
+	
 	static Font fntSansSerif = new Font("SanSerif", Font.PLAIN, 18);
 	static Font fntSansSerifBig = new Font("SanSerif", Font.PLAIN, 48);
-	
+	static Font fntSansSerifSmall = new Font("SanSerif", Font.PLAIN, 15);
 	
 	static GridBagConstraints gbc = new GridBagConstraints();
 	

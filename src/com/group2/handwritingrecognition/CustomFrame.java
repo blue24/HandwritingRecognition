@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -18,24 +20,27 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Timer;
 
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 
 
 public class CustomFrame extends JFrame{
 	
+	boolean loadedAnyReceivedSamples = false;
+	
+	public CustomFrame thisFrameRef;
 	private static final long serialVersionUID = -5763319334266549575L;
 	
 	int recentGuess;
@@ -45,7 +50,7 @@ public class CustomFrame extends JFrame{
 	
 	boolean doTrialsForAll = false;
 	
-	JButton deleteButton;
+	CustomButton deleteButton;
 	
 	public int trialManagerBoxWidth = 50;
 	public int trialManagerBoxHeight = 50;
@@ -70,13 +75,13 @@ public class CustomFrame extends JFrame{
 
 	public TextField txtOutput;
 	
-	public JButton btnConfirm;
-	public JButton btnClear;
+	public CustomButton btnConfirm;
+	public CustomButton btnClear;
 	
-	public JLabel lblMessage;
-	public JLabel lblMessage2;
+	public CustomLabel lblMessage;
+	public CustomLabel lblMessage2;
 	
-	public JButton trainButton;
+	public CustomButton trainButton;
 	
 	public TrialMemory[] characterData;
 	
@@ -145,6 +150,38 @@ public class CustomFrame extends JFrame{
 	public CustomFrame(int defaultSize_x, int defaultSize_y){
 		super();
 		
+		thisFrameRef = this;
+		
+		characterData = new TrialMemory[10];
+		for(int i = 0; i < characterData.length; i++){
+			characterData[i] = new TrialMemory();
+		}
+		
+		
+		
+		
+		this.addKeyListener(new KeyListener(){
+			@Override
+			public void keyPressed(KeyEvent event) {
+				
+			}
+			@Override
+			public void keyReleased(KeyEvent event) {
+				int keyCode = event.getKeyCode();
+				if(keyCode == KeyEvent.VK_ENTER){
+					if(drawSubPan.disableDrawing == false){
+						confirmClicked();
+					}
+					
+				}
+			}
+			@Override
+			public void keyTyped(KeyEvent event) {
+				
+			}
+		});
+		
+		
 		final CustomFrame frameRef = this;
 		this.addComponentListener(new ComponentListener(){
 			@Override
@@ -187,10 +224,7 @@ public class CustomFrame extends JFrame{
 		expectedDataName = "characterData" + Static.groupPixelsWidth + "x" + Static.groupPixelsHeight + ".dat";
 		expectedWeightsDataName = "charges" + Static.numbOfInputNeurons+ "_" + Static.numbOfNeuronsPerHiddenLayer + "_" + Static.numberOfHiddenLayers + "_" + Static.numberOfOutputNeurons + ".dat";
 		
-		characterData = new TrialMemory[10];
-		for(int i = 0; i < characterData.length; i++){
-			characterData[i] = new TrialMemory();
-		}
+		
 		
 		errorFlashTimer1 = new TimerManager(){
 			@Override public void action(){
@@ -274,10 +308,19 @@ public class CustomFrame extends JFrame{
 		}
 		
 		if(startWithTrial){
-			doTrialsForAll = true;
-			numberToDraw = 0;
-			trialsLeft = Static.trialsPerNumber;
-			setGUITrial();
+
+			attemptLoadReceivedSamples();
+			
+			if(!loadedAnyReceivedSamples){
+				doTrialsForAll = true;
+				numberToDraw = 0;
+				trialsLeft = Static.trialsPerNumber;
+				setGUITrial();
+			}else{
+				setGUIUse();
+			}
+			
+			
 		}else{
 			
 			if(Static.networkdNeedsTrainPrompt && dueForWeightUpdate){
@@ -299,6 +342,7 @@ public class CustomFrame extends JFrame{
 	
 	void setGUIBlank(){
 		clearGUI();
+		drawSubPan.disableDrawing = true;
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 1, 1, 0.7,  1.0, 0, 0, pan, drawSubPan);
 		
 		betterPack();
@@ -493,6 +537,7 @@ public class CustomFrame extends JFrame{
 	void setGUITrialManager(int actionIndex){
 		
 		clearGUI();
+		drawSubPan.disableDrawing = true;
 		
 		trialsLeft = Static.trialsPerNumber;
 		numberToDraw = 0;
@@ -500,10 +545,9 @@ public class CustomFrame extends JFrame{
 		programMode = 2;
 		
 		
-		lblMessage = new JLabel();
-		lblMessage.setFont(Static.fntSansSerif);
+		lblMessage = new CustomLabel();
 		
-		JButton backButton = new JButton();
+		CustomButton backButton = new CustomButton();
 		backButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				
@@ -544,7 +588,7 @@ public class CustomFrame extends JFrame{
 		});
 		
 		
-		deleteButton = new JButton();
+		deleteButton = new CustomButton(true);
 		deleteButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				if(trialSelected != -1){
@@ -569,7 +613,7 @@ public class CustomFrame extends JFrame{
 		deleteButton.setText("Delete");
 		deleteButton.setEnabled(false);
 		
-		JButton add1Trial = new JButton();
+		CustomButton add1Trial = new CustomButton(true);
 		add1Trial.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				
@@ -584,7 +628,7 @@ public class CustomFrame extends JFrame{
 		add1Trial.setText("Add trial");
 		add1Trial.setEnabled(false);
 		
-		JButton add5Trial = new JButton();
+		CustomButton add5Trial = new CustomButton(true);
 		add5Trial.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				
@@ -600,7 +644,7 @@ public class CustomFrame extends JFrame{
 		add5Trial.setText("Add 5");
 		add5Trial.setEnabled(false);
 		
-		JButton add10Trial = new JButton();
+		CustomButton add10Trial = new CustomButton(true);
 		add10Trial.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				
@@ -615,7 +659,7 @@ public class CustomFrame extends JFrame{
 		add10Trial.setText("Add 10");
 		add10Trial.setEnabled(false);
 		
-		JButton addEndlessTrial = new JButton();
+		CustomButton addEndlessTrial = new CustomButton(true);
 		addEndlessTrial.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				
@@ -637,7 +681,6 @@ public class CustomFrame extends JFrame{
 			backButton.setText("Back");
 		}
 		
-		backButton.setFont(Static.fntSansSerif);
 		
 		JPanel tempPan = new JPanel();
 		tempPan.setLayout(new BoxLayout(tempPan, BoxLayout.X_AXIS));
@@ -707,13 +750,12 @@ public class CustomFrame extends JFrame{
 		clearGUI();
 		
 		currentInstructions = "The network needs to be trained.  Do that now?";
-		lblMessage = new JLabel();
+		lblMessage = new CustomLabel();
 		lblMessage.setText(currentInstructions);
-		lblMessage.setFont(Static.fntSansSerif);
 		
 		drawSubPan.disableDrawing = true;
 
-		JButton btnYes = new JButton();
+		CustomButton btnYes = new CustomButton();
 		btnYes.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				setGUIBlank();
@@ -723,10 +765,9 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		btnYes.setText("Yes");
-		btnYes.setFont(Static.fntSansSerif);
 		
 		
-		JButton btnNo = new JButton();
+		CustomButton btnNo = new CustomButton();
 		btnNo.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e){
@@ -735,7 +776,6 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		btnNo.setText("No");
-		btnNo.setFont(Static.fntSansSerif);
 		
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 2, 1, 0.7, 0.0, 0, 0, pan, lblMessage);
 		
@@ -760,28 +800,29 @@ public class CustomFrame extends JFrame{
 		
 		clearGUI();
 		
+		drawSubPan.disableDrawing = false;
+		
 		
 		programMode = 0;
 		
 		
-		lblMessage = new JLabel();
+		lblMessage = new CustomLabel();
 		lblMessage.setText(currentInstructions);
-		lblMessage.setFont(Static.fntSansSerif);
 		
 		drawSubPan.trialManagerIndex = -1;
 		
 		
-		btnConfirm = new JButton();
+		btnConfirm = new CustomButton();
 		btnConfirm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				confirmClicked();
+				thisFrameRef.setVisible(true);
 			}//END OF actionPerformed(...)
 		});
 		btnConfirm.setText("Confirm");
-		btnConfirm.setFont(Static.fntSansSerif);
 		
 		
-		btnClear = new JButton();
+		btnClear = new CustomButton();
 		btnClear.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e){
@@ -789,7 +830,6 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		btnClear.setText("Clear");
-		btnClear.setFont(Static.fntSansSerif);
 		
 		
 		//JPanel tempPan = new JPanel();
@@ -799,7 +839,7 @@ public class CustomFrame extends JFrame{
 		int guix = 1;
 		if(canExit){
 			
-			JButton btnBack = new JButton();
+			CustomButton btnBack = new CustomButton();
 			btnBack.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e){
 					endlessTrials = false;
@@ -807,7 +847,6 @@ public class CustomFrame extends JFrame{
 				}//END OF actionPerformed(...)
 			});
 			btnBack.setText("Back");
-			btnBack.setFont(Static.fntSansSerif);
 			
 			Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, guix++, 3, 1, 1, 0.5, 0.0, 0, 0, pan, btnBack);
 			//tempPan.add(btnBack);
@@ -832,6 +871,8 @@ public class CustomFrame extends JFrame{
 		
 		clearGUI();
 		
+		drawSubPan.disableDrawing = false;
+		
 		trialsLeft = Static.trialsPerNumber;
 		numberToDraw = 0;
 		
@@ -845,17 +886,17 @@ public class CustomFrame extends JFrame{
 			
 		}
 		
-		lblMessage = new JLabel();
+		lblMessage = new CustomLabel();
 		lblMessage.setText(currentInstructions);
-		lblMessage.setFont(Static.fntSansSerif);
 		
 		
 		txtOutput = new TextField();
 		txtOutput.setEditable(true);
 		txtOutput.setFont(Static.fntSansSerif);
+		//txtOutput.setFocusable(false);
 		
 		
-		JButton btnTxtClear = new JButton();
+		CustomButton btnTxtClear = new CustomButton();
 		btnTxtClear.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e){
@@ -863,25 +904,22 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		btnTxtClear.setText("Clear");
-		btnTxtClear.setFont(Static.fntSansSerif);
 		
 		
 		
 		
-		lblMessage2 = new JLabel();
+		
+		lblMessage2 = new CustomLabel();
 		lblMessage2.setText("Last guess:   " );
-		lblMessage2.setFont(Static.fntSansSerif);
 		
-		JLabel lblMessage3 = new JLabel();
+		CustomLabel lblMessage3 = new CustomLabel();
 		lblMessage3.setText("    Intention? :  " );
-		lblMessage3.setFont(Static.fntSansSerif);
 		
-		JLabel lblSpacer = new JLabel();
+		CustomLabel lblSpacer = new CustomLabel();
 		lblSpacer.setText("     " );
-		lblSpacer.setFont(Static.fntSansSerif);
 		
 		
-		trainButton = new JButton();
+		trainButton = new CustomButton(true);
 		trainButton.setText("Train");
 		trainButton.addActionListener(new ActionListener() {
 			@Override
@@ -897,11 +935,11 @@ public class CustomFrame extends JFrame{
 		trainButton.setEnabled(dueForWeightUpdate);
 		
 
-		final JButton[] buttonsForNumbers = new JButton[10];
+		final CustomButton[] buttonsForNumbers = new CustomButton[10];
 		
 		for(int i = 0; i < 10; i++){
 			final int index = i;
-			buttonsForNumbers[i] = new JButton();
+			buttonsForNumbers[i] = new CustomButton(true);
 			buttonsForNumbers[i].addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e){
@@ -921,7 +959,7 @@ public class CustomFrame extends JFrame{
 		
 		
 		
-		btnConfirm = new JButton();
+		btnConfirm = new CustomButton();
 		btnConfirm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				
@@ -934,10 +972,9 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		btnConfirm.setText("Confirm");
-		btnConfirm.setFont(Static.fntSansSerif);
+		btnConfirm.setFocusable(false);
 		
-		
-		btnClear = new JButton();
+		btnClear = new CustomButton();
 		btnClear.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e){
@@ -945,17 +982,15 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		btnClear.setText("Clear");
-		btnClear.setFont(Static.fntSansSerif);
 		
 		
-		JButton doTrials = new JButton();
+		CustomButton doTrials = new CustomButton();
 		doTrials.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				setGUITrialManager(0);
 			}//END OF actionPerformed(...)
 		});
 		doTrials.setText("Trials");
-		doTrials.setFont(Static.fntSansSerif);
 		
 
 		int windowWidth = getPreferredSize().width;
@@ -1033,6 +1068,8 @@ public class CustomFrame extends JFrame{
 					
 						doTrialsForAll = false;
 						writeTrials();
+						
+						
 						if(Static.autoTrain){
 							setGUIBlank();
 							startTrainingThread();
@@ -1048,6 +1085,7 @@ public class CustomFrame extends JFrame{
 					queueSaveTrials = true;
 					dueForWeightUpdate = true;
 					setGUITrialManager(1);
+					return;
 				}//END OF else statement.
 				
 			}//END OF if(trialsLeft == 0)
@@ -1143,6 +1181,88 @@ public class CustomFrame extends JFrame{
 		
 	}
 	
+	
+	public void attemptLoadReceivedSamples(){
+		
+		File ff = new File("SAMPLE RECEIVER");
+		if(ff.exists() == false){
+			ff.mkdir();
+		}
+		File[] files = ff.listFiles();
+		
+		for(int i = 0; i < files.length; i++){
+			attemptLoadReceivedSample(files[i].toString());
+			
+		}
+		
+	}
+	public void attemptLoadReceivedSample(String path){
+		
+		boolean fail = false;
+		
+		if(path.endsWith(".dat")){
+			try {
+				FileInputStream fileIn = new FileInputStream(path);
+				ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+				TrialMemory[] temp = (TrialMemory[]) objectIn.readObject();
+				objectIn.close();
+				fileIn.close();
+				
+				if(Static.recentLoadedTrialLength2 != Static.groupPixelsHeight || Static.recentLoadedTrialLength3 != Static.groupPixelsWidth){
+					System.out.println("WARNING: Could not load " + path + " due to bad dimensions.");
+					System.out.println("Expected: " + Static.groupPixelsWidth + "x" + Static.groupPixelsHeight + " Received: " + Static.recentLoadedTrialLength3 + "x" + Static.recentLoadedTrialLength2);
+					fail = true;
+				}else{
+					System.out.println("~loaded " + path);
+				}
+				
+				if(!fail){
+					loadedAnyReceivedSamples = true;
+					dueForWeightUpdate = true;
+					queueSaveTrials = true;
+					for(int i = 0; i < characterData.length; i++){
+						characterData[i].trialMem.addAll(temp[i].trialMem);
+					}
+				}
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			if(!fail){
+				
+				File f = new File("SAMPLE PROCESSED");
+				if(f.exists() == false){
+					f.mkdir();
+				}
+				
+				//File f = new File(path);
+				//f.delete();
+				File from = new File(path);
+				String name = from.getName();
+				
+				int attemptedNewNameNumber = 1;
+				
+				String destPath = "SAMPLE PROCESSED" + Static.fileSep + name.substring(0, name.length() -4 );
+				//System.out.println("DEST PATH " +destPath);
+				String destPathTry = destPath + ".dat";
+				while(true){
+					File dest = new File(destPathTry);
+					if(!dest.exists()){
+						from.renameTo(dest);
+						break;
+					}
+					attemptedNewNameNumber++;
+					destPathTry = destPath + " (" + attemptedNewNameNumber + ").dat";
+				}
+				
+				
+				
+			}//END OF if(!fail)
+		}
+		
+	}
+	
 	public void attemptLoadTrials(){
 		
 		if(!Static.forceNoLoad && new File("memory/" + expectedDataName).exists() ){
@@ -1157,6 +1277,12 @@ public class CustomFrame extends JFrame{
 				e.printStackTrace();
 			}
 			loadedSomething = true;
+			
+			attemptLoadReceivedSamples();
+			if(loadedAnyReceivedSamples){
+				queueSaveTrials = true;
+			}
+			
 		}else{
 			startWithTrial = true;
 			//Let the user give samples, if none exist to train the network with.

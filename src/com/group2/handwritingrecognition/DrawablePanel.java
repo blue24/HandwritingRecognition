@@ -7,6 +7,8 @@ import java.awt.GridBagLayout;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.ComponentAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -132,8 +134,9 @@ public class DrawablePanel extends JPanel {
 		super();
 		
 		frameRef = arg_frameRef;
-		drawTrialManagerNumberCoordsX = new int[10];
-		drawTrialManagerNumberCoordsY = new int[10];
+		drawTrialManagerNumberCoordsX = new int[frameRef.characterData.length];
+		drawTrialManagerNumberCoordsY = new int[frameRef.characterData.length];
+		
 		
 		
 		final DrawablePanel refBack = this;
@@ -573,14 +576,18 @@ public class DrawablePanel extends JPanel {
 	
 	void onMouseClicked(int x, int y){
 		//exact same logic, routing to "onMouseDrag".
+		
+		
 		if(!disableDrawing){
+			frameRef.requestFocus();
 			onMouseDrag(x, y);
 		}
 		
 		//System.out.println("THE PLACE " + " " + x + " " + y);
-		if(!disableDrawing && trialManagerIndex != -1){
+		if(trialManagerIndex != -1){
 			//If in the trial manager, send this click to frameRef.
 			frameRef.drawSubPanClicked(x, y);
+			
 		}
 	}
 	

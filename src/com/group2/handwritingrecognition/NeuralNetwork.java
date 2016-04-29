@@ -20,24 +20,12 @@ public class NeuralNetwork {
 	int numberOfOutputNeurons;
 	
 	DrawablePanel drawablePanelRef;
+
+	float learningRateToUse = 0;
 	
 	
 	public synchronized void writeWeights(java.io.ObjectOutputStream stream) throws IOException {
-		//stream.defaultWriteObject( );
 		
-		/*
-		stream.writeInt(numberOfInputNeurons);
-		stream.writeInt(numberOfNeuronsPerHiddenLayer);
-		stream.writeInt(numberOfHiddenNeuronLayers);
-		stream.writeInt(numberOfOutputNeurons);
-		
-		stream.writeBoolean(inputHasBias);
-		*/
-		
-		
-		//stream.writeInt(inputLayer.neurons.size());
-		
-		//inputLayer = new NeuronLayer(nodesInInput, null, inputHasBias);
 		writeWeights(inputLayer, stream);
 		
 		for(int i = 0; i < hiddenLayers.length; i++){
@@ -51,10 +39,8 @@ public class NeuralNetwork {
 		for(int i = 0; i < someLayer.neurons.size(); i++){
 			Neuron thisNeuron = someLayer.neurons.get(i);
 			
-			//stream.writeInt(thisNeuron.connectionsOut.size());
 			for(int i2 = 0; i2 < thisNeuron.connectionsOut.size(); i2++){
 				stream.writeFloat(thisNeuron.connectionsOut.get(i2).weight);
-				//System.out.println("wrote " + i2 + " : " + thisNeuron.connectionsOut.get(i2).weight);
 			}
 		}
 	}
@@ -64,68 +50,49 @@ public class NeuralNetwork {
 		for(int i = 0; i < someLayer.neurons.size(); i++){
 			Neuron thisNeuron = someLayer.neurons.get(i);
 			
-			//thisNeuron.connectionsOut.size() = stream.readInt();
 			for(int i2 = 0; i2 < thisNeuron.connectionsOut.size(); i2++){
 				thisNeuron.connectionsOut.get(i2).weight = stream.readFloat();
-				//System.out.println("read " + i2 + " : " + thisNeuron.connectionsOut.get(i2).weight);
 			}
 		}
 	}
 	
 	
 	public synchronized void loadWeights(ObjectInputStream stream) throws java.io.IOException {
-		/*
-		try {
-			stream.defaultReadObject( );
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
-		
-		
-		/*
-		numberOfInputNeurons = stream.readInt();
-		numberOfNeuronsPerHiddenLayer = stream.readInt();
-		numberOfHiddenNeuronLayers = stream.readInt();
-		numberOfOutputNeurons = stream.readInt();
-		
-		inputHasBias = stream.readBoolean();
-		*/
-		
-		
-		//inputLayer.neurons.size() = stream.readInt();
-		
-		//inputLayer = new NeuronLayer(nodesInInput, null, inputHasBias);
-		
-		
 		
 		loadWeights(inputLayer, stream);
 		
 		for(int i = 0; i < hiddenLayers.length; i++){
 			loadWeights(hiddenLayers[i], stream);
 		}
-		
-		
-		
-		
 	}
 	
 	
 	//Here are some inputs for the network.  You may force them here or adjust them in CustomFrame's constructor, which creates the network.
 	public NeuralNetwork(int arg_numberOfInputNeurons, int arg_numberOfNeuronsPerHiddenLayer, int arg_numberOfHiddenNeuronLayers, int arg_numberOfOutputNeurons, boolean inputHasBias, DrawablePanel arg_drawablePanelRef ){
+		
 		numberOfInputNeurons = arg_numberOfInputNeurons;
 		numberOfNeuronsPerHiddenLayer = arg_numberOfNeuronsPerHiddenLayer;
 		numberOfHiddenNeuronLayers = arg_numberOfHiddenNeuronLayers;
 		numberOfOutputNeurons = arg_numberOfOutputNeurons;
 		
 		drawablePanelRef = arg_drawablePanelRef;
-
+		
 		int nodesInInput = numberOfInputNeurons;
 		
 		if(inputHasBias){
 			//extra for bias.
 			nodesInInput ++;
 		}
+		
+		drawablePanelRef.buildingNeuralNetwork = true;
+		drawablePanelRef.connectionsDoneYet = 0;
+		drawablePanelRef.connectionsToDo = nodesInInput * numberOfNeuronsPerHiddenLayer
+				+ numberOfNeuronsPerHiddenLayer * numberOfNeuronsPerHiddenLayer * (numberOfHiddenNeuronLayers - 1)
+				+ numberOfOutputNeurons * numberOfNeuronsPerHiddenLayer;
+		
+		drawablePanelRef.endPaintUpdate = false;
+		drawablePanelRef.startPaintUpdateThread();
+		
 		
 		inputLayer = new NeuronLayer(nodesInInput, null, inputHasBias);
 		
@@ -143,11 +110,11 @@ public class NeuralNetwork {
 		outputLayer = new NeuronLayer(numberOfOutputNeurons, prevLayer, false);
 		
 		
-		
-		
+		drawablePanelRef.buildingNeuralNetwork = false;
+
+		drawablePanelRef.endPaintUpdate = true;
 		
 	}
-	
 	
 	
 	//reset all the charges (connection weights, particularly)
@@ -161,7 +128,6 @@ public class NeuralNetwork {
 		}
 		outputLayer.clear();
 		
-		
 	}
 	
 	
@@ -174,6 +140,8 @@ public class NeuralNetwork {
 			
 		
 		drawablePanelRef.currentlyTraining = true;
+		
+		drawablePanelRef.startLoadTime = System.currentTimeMillis();
 		
 		drawablePanelRef.endPaintUpdate = false;
 		drawablePanelRef.startPaintUpdateThread();
@@ -189,23 +157,28 @@ public class NeuralNetwork {
 		
 		thisTrial = 0;
 		
-		drawablePanelRef.totalTrials = characterData.length * Static.trialsPerNumber * timesToTrain;
+		drawablePanelRef.totalTrials = 0;
+		
+		for(int i = 0; i < characterData.length; i++){
+			drawablePanelRef.totalTrials += characterData[i].trialMem.size();
+		}
+		
+		
+		drawablePanelRef.totalTrials *= timesToTrain;
 		
 		
 		for(int i3 = 0; i3 < timesToTrain; i3++){
 			
+			//The learning rate will vary from the maxRate to the minRate.
+			//It progresses to the minRate quickly (compared to a linear movement).
 			learningRateToUse = Static.learningRateMin + ( (1 - ((float)Math.sqrt( i3 / (trainDivisor) ) ) ) * (learningRateDelta));
 			
 			
 			for(int i = 0; i < characterData.length; i++){
 				
-				for(int i2 = 0; i2 < characterData[i].trialMem.length; i2++){
+				for(int i2 = 0; i2 < characterData[i].trialMem.size(); i2++){
 					
-					
-					//int y = (int) ( (1 - (Math.pow(i/500f, 1/3f) )) * 500);
-					//This makes the learningRate depend on 
-					
-					trainWithTrial(characterData[i].trialMem[i2], i);
+					trainWithTrial(characterData[i].trialMem.get(i2), i);
 					
 					thisTrial++;
 					drawablePanelRef.trialsDone = thisTrial;
@@ -220,30 +193,19 @@ public class NeuralNetwork {
 		drawablePanelRef.currentlyTraining = false;
 		drawablePanelRef.endPaintUpdate = true;
 		
-		System.out.println("RESULTS:::");
-		
+		System.out.println("RESULTS OF SELF TEST:::");
 		for(int i = 0; i < characterData.length; i++){
 			
-			for(int i2 = 0; i2 < characterData[i].trialMem.length; i2++){
-				
-				//for(int i3 = 0; i3 < timesToTrain; i3++){
-					int result = attemptTrial(characterData[i].trialMem[i2]);
-					
-					if(result == i){
-						System.out.println("CORRECT");
-					}else{
-						System.out.println("NO");
-					}
-					
-				//}
-				
-				
+			for(int i2 = 0; i2 < characterData[i].trialMem.size(); i2++){
+				int result = attemptTrial(characterData[i].trialMem.get(i2));
+				if(result == i){
+					System.out.println("CORRECT");
+				}else{
+					System.out.println("NO");
+				}
 			}//END OF for(int i2 = 0...)
 			//break;
 		}//END OF for(int i = 0...)
-		
-		
-		
 		
 	}
 	
@@ -258,29 +220,17 @@ public class NeuralNetwork {
 	}
 	
 	
-	
-	
-	float learningRateToUse = 0;
-	
-	//TODO
 	void sendTrialToInputNeurons(boolean[][] thisTrial){
 		
-		
-		//System.out.println("TRIAL!!!!!!!!!!!!!!!!!!!!!");
 		int inputNeuronIndex = 0;
 		for(int y = 0; y < thisTrial.length; y++){
 			for(int x = 0; x < thisTrial[y].length; x++){
 				
-				//... = boolToInt(thisTrial[y][x]);
 				inputLayer.neurons.get(inputNeuronIndex).setInputCharge(boolToInt(thisTrial[y][x]));
 				inputNeuronIndex++;
 				
-				//System.out.print(boolToInt(thisTrial[y][x]));
 				
 			}//END OF for(int x = 0...)
-			
-			//System.out.println();
-			
 		}//END OF for(int y = 0...)
 		
 		//...Or, you can count by "inputNeuronIndex" linearly in a single for loop and determine row and col positions like so:
@@ -291,13 +241,11 @@ public class NeuralNetwork {
 			int y = i / thisTrial.length;
 			//... = boolToInt(thisTrial([y][x]));
 			
-			
 		}
 		*/
 		
 	}
-	
-	//TODO
+
 	void sendTargetToOutputs(int correctNumber){
 		
 		//I imagine this should be, "what single output neuron's target should be 1 instead of 0?"
@@ -321,7 +269,6 @@ public class NeuralNetwork {
 	
 	
 	
-	//TODO
 	void trainWithTrial(boolean[][] thisTrial, int correctNumber){
 		
 		trainingWithNumber = correctNumber;
@@ -341,16 +288,11 @@ public class NeuralNetwork {
 		
 	}
 	
-	//TODO
+	
 	int attemptTrial(boolean[][] thisTrial){
 		
 		sendTrialToInputNeurons(thisTrial);
 		
-		//...
-		
-		//read output neurons, come up with a "result":
-		int result = 0;
-				
 		
 		
 		feedForward();
@@ -387,28 +329,13 @@ public class NeuralNetwork {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 	NeuronLayer inputLayer;
 	NeuronLayer[] hiddenLayers;
 	NeuronLayer outputLayer;
 	
-	
-	
-	
-	
-	
-	
-	int times = 30;
+	//just to print out a bit.
+	int times = 5;
 	
 	//Train.
 	void train( ){
@@ -529,7 +456,7 @@ public class NeuralNetwork {
 	}
 	
 	
-	
+	int recentLayerIndex = 0;
 	
 	//Note that most methods here are just for applying to all nodes in the layer.
 	class NeuronLayer{
@@ -548,20 +475,25 @@ public class NeuralNetwork {
 				
 				if(prevLayer != null){
 					
+					
+					//count anyways, nodes that are biases are negligible, and this is just a rough load estimate anyways.
+						
 					//For all nodes in the previous layer, link to this one.
 					//Except for bias nodes in THIS layer (the last one each layer)!
 					//if(i != neuronsInLayer - 1){
+					drawablePanelRef.connectionsDoneYet+= prevLayer.neurons.size();
+					
 					if(newNeuron.isBias == false){	
 						for(int i2 = 0; i2 < prevLayer.neurons.size(); i2++){
-							
 							//isn't "this.neurons.get(i)" the same as "newNeuron" ?
 							createConnection(prevLayer.neurons.get(i2), this.neurons.get(i) );
-							
+							//System.out.println("?!? " + recentLayerIndex + " ::: " + i2 + " : " + i);
 						}
 					}
+					
 				}
 			}//END OF for(int i = 0...)
-			
+			recentLayerIndex++;
 		}//END OF CONSTRUCTOR OF NeuronLayer
 		
 		public void clear(){

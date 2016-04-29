@@ -2,11 +2,12 @@ package com.group2.handwritingrecognition;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class TrialMemory implements Serializable {
 	
 	
-	public transient boolean[][][] trialMem;
+	public transient ArrayList<boolean[][]> trialMem;
 	
 	
 	
@@ -15,22 +16,22 @@ public class TrialMemory implements Serializable {
 		stream.defaultWriteObject( );
 		
 		
-		int length1 = trialMem.length;
-		int length2 = trialMem[0].length;
-		int length3 = trialMem[0][0].length;
+		int length1 = trialMem.size();
+		int length2 = Static.groupPixelsHeight;
+		int length3 = Static.groupPixelsWidth;
 		
 		
-		stream.writeInt(trialMem.length);
-		stream.writeInt(trialMem[0].length);
-		stream.writeInt(trialMem[0][0].length);
+		stream.writeInt(length1);
+		stream.writeInt(length2);
+		stream.writeInt(length3);
 		
 		
 		
 		for(int i = 0; i < length1; i++){
 			for(int y = 0; y < length2; y++){
 				for(int x = 0; x < length3; x++){
-					if(trialMem[i] != null && trialMem[i][y] != null){
-						stream.writeBoolean(trialMem[i][y][x]);
+					if(trialMem.get(i) != null && trialMem.get(i)[y] != null){
+						stream.writeBoolean(trialMem.get(i)[y][x]);
 					}
 				}
 			}
@@ -54,13 +55,15 @@ public class TrialMemory implements Serializable {
 		int length2 = stream.readInt();
 		int length3 = stream.readInt();
 		
-		trialMem = new boolean[Static.trialsPerNumber][][];
+		//Static.trialsPerNumber
+		trialMem = new ArrayList<boolean[][]>();
 		
 		for(int i = 0; i < length1; i++){
-			trialMem[i] = new boolean[length2][length3];
+			boolean[][] thisImage = new boolean[length2][length3];
+			trialMem.add(thisImage);
 			for(int y = 0; y < length2; y++){
 				for(int x = 0; x < length3; x++){
-					trialMem[i][y][x] = stream.readBoolean();
+					thisImage[y][x] = stream.readBoolean();
 					
 				}
 			}
@@ -71,8 +74,8 @@ public class TrialMemory implements Serializable {
 	
 	public TrialMemory(){
 		//one trial for each number.
-		trialMem = new boolean[Static.trialsPerNumber][][];
-		
+		//trialMem = new boolean[Static.trialsPerNumber][][];
+		trialMem = new ArrayList<boolean[][]>();
 	}
 	
 }

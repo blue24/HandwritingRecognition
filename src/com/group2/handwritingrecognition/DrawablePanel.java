@@ -10,27 +10,44 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.swing.JPanel;
 
 public class DrawablePanel extends JPanel {
 	
 
-	
+	int[] drawTrialManagerNumberCoordsX;
+	int[] drawTrialManagerNumberCoordsY;
 	
 	
 	boolean[][] pixels;
 	int pixelsWidth;
 	int pixelsHeight;
 	
+	int trialManagerIndex = -1;
+	
+	long startLoadTime = 0;
 	
 	int totalTrials = 0;
-	//String loadBarTrialsText = "";
 	int trialsDone = 0;
+	
+	int loadTimes = 0;
+	
+	int connectionsToDo = 0;
+	int connectionsDoneYet = 0;
+	
 	boolean currentlyTraining = false;
+	boolean buildingNeuralNetwork = false;
+	boolean disableDrawing = false;
+	
+	Calendar cal = Calendar.getInstance();
+	//DateFormat dateFormat = new SimpleDateFormat("dd HH:mm:ss");
 	
 	
-
 	boolean[][] groupPixels;
 	
 	
@@ -61,14 +78,16 @@ public class DrawablePanel extends JPanel {
 	
 	
 	public void attemptResizePixelArray(){
-		
-		
+		attemptResizePixelArray(true);
+	}
+	
+	public void attemptResizePixelArray(boolean canCallResizeActHandle){
+			
 			int testWidth = getWidth();
 			int testHeight = getHeight();
 			if(testWidth != pixelsWidth || testHeight != pixelsHeight){
 				//Resize the pixels array.
 				
-
 				System.out.println("PIXELS RESIZED");
 				
 				
@@ -94,23 +113,17 @@ public class DrawablePanel extends JPanel {
 				}
 				
 				
-				
-				/*
-				pixelDrawMinY = Integer.MAX_VALUE;
-				pixelDrawMaxY = Integer.MIN_VALUE;
-				pixelDrawMinX = Integer.MAX_VALUE;
-				pixelDrawMaxX = Integer.MIN_VALUE;
-				drawnYet = false;
-				*/
+				if(canCallResizeActHandle){
+					frameRef.resizeActHandle();
+				}
 				
 				repaint();
-				
 			}
 		
-		
+			resizedSince = false;
+			//Not resized since just now.
 		
 	}
-	
 	
 	boolean endPaintUpdate = false;
 	Thread paintUpdate;
@@ -119,102 +132,72 @@ public class DrawablePanel extends JPanel {
 		super();
 		
 		frameRef = arg_frameRef;
-		
-		
+		drawTrialManagerNumberCoordsX = new int[10];
+		drawTrialManagerNumberCoordsY = new int[10];
 		
 		
 		final DrawablePanel refBack = this;
 		
-		
-		
-		
-		
-
 		this.addComponentListener(new ComponentListener(){
-			
-			
-
 			@Override
 			public void componentHidden(ComponentEvent arg0) {
 				
 			}
-
 			@Override
 			public void componentMoved(ComponentEvent arg0) {
 				
 			}
-
 			@Override
 			public void componentResized(ComponentEvent arg0) {
-				
 				resizedSince = true;
 				
 			}
-
 			@Override
 			public void componentShown(ComponentEvent arg0) {
 				
 			}
-			
-			
 		});
 		
 		
-		
-		
 		this.addMouseMotionListener(new MouseMotionListener(){
-
 			@Override
 			public void mouseDragged(MouseEvent arg0) {
-				
+				if(!disableDrawing){
 				onMouseDrag(arg0.getX(), arg0.getY());
-				
+				}
 			}
-
 			@Override
 			public void mouseMoved(MouseEvent arg0) {
 				
 			}
-			
 		}); 
 		
-		
 		this.addMouseListener(new MouseListener(){
-
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				
 			}
-
 			@Override
 			public void mouseEntered(MouseEvent arg0) {
 				if(resizedSince){
 					attemptResizePixelArray();
+					
 				}
 			}
-
 			@Override
 			public void mouseExited(MouseEvent arg0) {
 				
 			}
-
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				onMouseClicked(arg0.getX(), arg0.getY());
 			}
-
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				onMouseReleased(arg0.getX(), arg0.getY());
 			}
-			
-			
 		});
-
-		
 	}
-	
-	
 	
 	public void startPaintUpdateThread(){
 		paintUpdate = new Thread(){
@@ -222,7 +205,6 @@ public class DrawablePanel extends JPanel {
 			public void run(){
 				
 				while(!endPaintUpdate){
-					
 					repaint();
 					try {
 						Thread.sleep(17);
@@ -237,41 +219,110 @@ public class DrawablePanel extends JPanel {
 		paintUpdate.start();
 	}
 	
-	
 	@Override
-	public void paint(Graphics g){
-		g.setColor(Static.clrWhite);
+	public void paintComponent (Graphics g){
+		
+		super.paintComponent (g);
+		
+		int currentWidth = getWidth();
+		
+		g.setFont(Static.fntSansSerif);
+		
+		g.setColor(Static.clrOffWhite);
 		//g.drawLine(0,  0,  15,  15);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		
 		
-		if(currentlyTraining){
+		if(currentlyTraining || buildingNeuralNetwork){
 			
-			int loadBarWidth = 250;
+			int loadBarWidth = (int) (currentWidth * 0.8f);
 			int loadBarHeight = 36;
 			
-			int loadBarStartX = (getWidth() - loadBarWidth) / 2 ;
+			int loadBarStartX = (currentWidth - loadBarWidth) / 2 ;
 			int loadBarStartY = (getHeight() - loadBarHeight) / 2;
 			
 			g.setColor(Static.clrRed);
 			g.fillRect(loadBarStartX, loadBarStartY, loadBarWidth, loadBarHeight);
 			
+			String loadBarText = null;
+			float fraction = 0;
 			
+			
+			if(buildingNeuralNetwork){
+				fraction = (float)connectionsDoneYet / (float)connectionsToDo;
+				g.setColor(Static.clrWhite);
+				loadBarText = "Connections made: " + connectionsDoneYet + " / " + connectionsToDo;
+				
+			}else if(currentlyTraining){
+				fraction = (float)trialsDone / (float)totalTrials;
+				loadBarText = "Trials done: " + trialsDone + " / " + totalTrials;
+			}
+			
+			int loadBarDoneWidth = (int) ( (fraction) * (loadBarWidth-6)  ) ;
 			
 			g.setColor(Static.clrGreen);
-			int loadBarDoneWidth = (int) ( ((float)trialsDone / (float)totalTrials) * (loadBarWidth-6)  ) ;
 			g.fillRect(loadBarStartX + 3, loadBarStartY + 3, loadBarDoneWidth, loadBarHeight-6);
 			
-			
-			
 			g.setColor(Static.clrWhite);
-			g.drawString("Trials done: " + trialsDone + " / " + totalTrials , loadBarStartX + 40, loadBarStartY + 20);
+			g.drawString(loadBarText , (currentWidth - g.getFontMetrics().stringWidth(loadBarText))/2, loadBarStartY + 23);
 			
 			
+			long timePassed = System.currentTimeMillis() - startLoadTime;
+			
+			String dateString = null;
+			
+			if(fraction == 0 || timePassed == 0){
+				g.setColor(Static.clrBlack);
+				dateString = "???";
+				
+			}else if(timePassed < 7000){
+				
+				g.setColor(Static.clrBlack);
+				dateString = "Estimating...";
+				
+			}else{
+				
+
+				long ETA = (long) ((timePassed / fraction) - timePassed);
+
+				//CREDIT: http://stackoverflow.com/questions/4863658/how-to-get-system-time-in-java-without-creating-a-new-date
+				cal.setTimeInMillis(ETA);
+				//Date tempDate = cal.getTime();
+				int hours = 0;
+				int minutes = 0;
+				int seconds = 0;
+				
+				hours = (int)(ETA / 3600000l);
+				ETA -= hours * 3600000l;
+				minutes = (int)(ETA / 60000l);
+				ETA -= minutes * 60000l;
+				seconds = (int)(ETA / 1000l);
+				ETA -= seconds * 1000l;
+				
+				if(hours > 0){
+					dateString = hours + " hr, " + minutes + " m";
+				}else if(minutes > 10){
+					dateString = minutes + " m";
+				}else if(minutes > 0){
+					dateString = minutes + " m, " + seconds + " s";
+				}else{
+					dateString = seconds + " s";
+				}
+				
+			}//END OF else statement
+			
+			g.setColor(Static.clrBlack);
+			g.drawString("ETA: " + dateString, loadBarStartX + 40, loadBarStartY + 60 );
+			
+			/*
+			g.setColor(Static.clrBlack);
+			g.drawString("test1: " + timePassed, loadBarStartX + 40, loadBarStartY + 90 );
+			g.setColor(Static.clrBlack);
+			g.drawString("test2: " + ETA, loadBarStartX + 40, loadBarStartY + 120 );
+			*/
+			//Attempt nothing else if the loading bar is being drawn.
 			return;
 		}
-		
-		
 		
 		g.setColor(Static.clrBlack);
 		if(pixels != null){
@@ -284,35 +335,37 @@ public class DrawablePanel extends JPanel {
 			}
 		}
 		
-		
 		if(Static.drawDebug){
 			drawSectors(g);
-			
 			
 			int toDrawX1 = (int)(pixelDrawMinX - extraPixelDrawXPadding);
 			int toDrawX2 = (int)(pixelDrawMaxX + extraPixelDrawXPadding);
 			int toDrawY1 = (int)(pixelDrawMinY - extraPixelDrawYPadding);
 			int toDrawY2 = (int)(pixelDrawMaxY + extraPixelDrawYPadding);
 			
-			
 			g.setColor(Static.clrRed);
-			drawSquare(g, toDrawX1, toDrawY1, toDrawX2, toDrawY2);
+			drawSquareCheap(g, toDrawX1, toDrawY1, toDrawX2, toDrawY2);
 		}
 		
-		
-		/*
-		g.drawLine(pixelDrawMinX, pixelDrawMinY, pixelDrawMaxX, pixelDrawMinY);
-		
-		g.drawLine(pixelDrawMinX, pixelDrawMaxY, pixelDrawMaxX, pixelDrawMaxY);
-		
-		
-		g.drawLine(pixelDrawMinX, pixelDrawMinY, pixelDrawMinX, pixelDrawMaxY);
-		
-		g.drawLine(pixelDrawMaxX, pixelDrawMinY, pixelDrawMaxX, pixelDrawMaxY);
-		*/
-		
-		
-		
+		if(trialManagerIndex == 1){
+			
+			if(frameRef.drawSpecialRect == true){
+				
+				g.setColor(Static.clrRed);
+				drawSquareCheap(g, frameRef.specialRectx1, frameRef.specialRecty1, frameRef.specialRectx2, frameRef.specialRecty2);
+				drawSquareCheap(g, frameRef.specialRectx1 + 1, frameRef.specialRecty1 + 1, frameRef.specialRectx2 - 1, frameRef.specialRecty2- 1);
+			}
+			
+		}else if(trialManagerIndex == 0){
+			g.setColor(Static.clrBlack);
+			g.setFont(Static.fntSansSerifBig);
+			int fontHeight = g.getFontMetrics().getAscent() - g.getFontMetrics().getDescent();
+			for(int i = 0; i < 10; i++){
+				String toDraw = String.valueOf(i);
+				g.drawString( toDraw, drawTrialManagerNumberCoordsX[i] - g.getFontMetrics().stringWidth(toDraw)/2, drawTrialManagerNumberCoordsY[i] + (fontHeight)/2  );
+			}
+			
+		}
 		
 	}
 	
@@ -330,25 +383,18 @@ public class DrawablePanel extends JPanel {
 	
 	void onMouseReleased(int x, int y){
 		
+		if(!disableDrawing){
 		//exact same logic, routing to "onMouseDrag"
 		onMouseDrag(x, y);
+		}
 		
 		//Also, invalidate "prevDrag" x & y.  Forget about the last drag frame's position.
 		prevDrag_x = -1;
 		prevDrag_y = -1;
-		
-		
-		
-		
 	}
 	
-	
-	
-	
-	void drawSquare(Graphics g, int x1, int y1, int x2, int y2){
+	void drawSquare(int x1, int y1, int x2, int y2){
 		
-		
-
 		if(x1 < 0){
 			x1 = 0;
 		}
@@ -363,6 +409,29 @@ public class DrawablePanel extends JPanel {
 			y2 = pixelsHeight-1;
 		}
 		
+		drawLine(x1, y1, x2, y1);
+		drawLine(x1, y2, x2, y2);
+		
+		drawLine(x1, y1, x1, y2);
+		drawLine(x2, y1, x2, y2);
+		
+	}
+	
+	void drawSquareCheap(Graphics g, int x1, int y1, int x2, int y2){
+		
+		if(x1 < 0){
+			x1 = 0;
+		}
+		if(x2 >= pixelsWidth){
+			x2 = pixelsWidth-1;
+		}
+		
+		if(y1 < 0){
+			y1 = 0;
+		}
+		if(y2 >= pixelsHeight){
+			y2 = pixelsHeight-1;
+		}
 		
 		g.drawLine(x1, y1, x2, y1);
 		g.drawLine(x1, y2, x2, y2);
@@ -370,9 +439,7 @@ public class DrawablePanel extends JPanel {
 		g.drawLine(x1, y1, x1, y2);
 		g.drawLine(x2, y1, x2, y2);
 		
-		
 	}
-	
 	
 	boolean boundsCheck(int x, int y){
 		if(x >= 0 && y >= 0 && x < pixelsWidth && y < pixelsHeight){
@@ -380,18 +447,15 @@ public class DrawablePanel extends JPanel {
 		}else{
 			return false;
 		}
-		
 	}
 	
 	void drawSectors(Graphics g){
-		
 		
 		if(pixels == null || drawnYet == false){
 			//can't draw it then.
 			return;
 		}
 		
-
 		int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX + (int)(extraPixelDrawXPadding * 2);
 		int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY + (int)(extraPixelDrawYPadding * 2);
 		
@@ -399,13 +463,10 @@ public class DrawablePanel extends JPanel {
 		int topStart = (int)(pixelDrawMinY - extraPixelDrawYPadding);
 		
 		
-		
 		float sectorWidth = ((float)usedBoundsWidth / (float)Static.groupPixelsWidth);
 		float sectorHeight = ((float)usedBoundsHeight / (float)Static.groupPixelsHeight);
 		
 		g.setColor(Static.clrGreen);
-		
-		
 		
 		
 		int drawnPixels = 0;
@@ -417,8 +478,6 @@ public class DrawablePanel extends JPanel {
 				//Counting these per sector, reset when checking a new sector...
 				drawnPixels = 0;
 				blankPixels = 0;
-				
-				
 				
 				for(int y = 0; y < sectorHeight; y++){
 					for(int x = 0; x < sectorWidth; x++){
@@ -435,75 +494,38 @@ public class DrawablePanel extends JPanel {
 					}
 				}
 				
-				
 				int offX = leftStart + (int)(gX*sectorWidth);
 				int offY = topStart + (int)(gY*sectorHeight);
 				
-				g.setColor(Static.clrGreen);
-				drawSquare(g, offX, offY, offX + (int)sectorWidth, offY + (int)sectorHeight);
-				
+				g.setColor(Static.clrGreenTrans);
+				drawSquareCheap(g, offX, offY, offX + (int)sectorWidth, offY + (int)sectorHeight);
 				
 				float drawnRatio = (float)drawnPixels / (float)(drawnPixels + blankPixels);
 				
 				if(drawnPixels >= Static.pixelsRequiredInSector || drawnRatio >= Static.sectorRegisterRatio){
 					//groupPixels[gY][gX] = true;
-					Color eh = new Color(0, 255, 255, 185);
-					g.setColor(eh);
+					g.setColor(Static.clrCyanTrans);
 					g.fillRect(offX, offY, (int)sectorWidth, (int)sectorHeight);
 					
 				}else{
 					//groupPixels[gY][gX] = false;
 				}
 				
-				
-				
-				
-				
-				
-				/*
-				int offX = pixelDrawMinX + (int)(gX*sectorWidth);
-				int offY = pixelDrawMinY + (int)(gY*sectorHeight);
-				
-				g.setColor(Static.clrGreen);
-				drawSquare(g, offX, offY, offX + (int)sectorWidth, offY + (int)sectorHeight);
-				
-				if(groupPixels[gY][gX] == true){
-					
-					
-					Color eh = new Color(0, 255, 255, 185);
-					g.setColor(eh);
-					g.fillRect(offX, offY, (int)sectorWidth, (int)sectorHeight);
-					
-					
-					//drawLine(offX, offY, offX + sectorWidth, offY + sectorHeight);
-				}
-				
-				*/
-				//groupPixels[gY][gX];
-				
-				
 			}//END OF for(int gX = 0...)
-			
 		}//END OF for(int gY = 0...)
-		
-		
-		
 	}
-	
 	
 	
 	boolean[][] attemptRead(){
 		
 		if(drawnYet){
 			groupPixels = new boolean[Static.groupPixelsHeight][Static.groupPixelsWidth];
-
-
+			
 			int usedBoundsWidth = pixelDrawMaxX - pixelDrawMinX + (int)(extraPixelDrawXPadding * 2);
 			int usedBoundsHeight = pixelDrawMaxY - pixelDrawMinY + (int)(extraPixelDrawYPadding * 2);
 			
 			int leftStart = (int)(pixelDrawMinX - extraPixelDrawXPadding);
 			int topStart = (int)(pixelDrawMinY - extraPixelDrawYPadding);
-			
 			
 			float sectorWidth = ((float)usedBoundsWidth / (float)Static.groupPixelsWidth);
 			float sectorHeight = ((float)usedBoundsHeight / (float)Static.groupPixelsHeight);
@@ -528,10 +550,8 @@ public class DrawablePanel extends JPanel {
 							}else{
 								blankPixels++;
 							}
-							
 						}
 					}
-					
 					float drawnRatio = (float)drawnPixels / (float)(drawnPixels + blankPixels);
 					
 					if(drawnPixels >= Static.pixelsRequiredInSector || drawnRatio >= Static.sectorRegisterRatio){
@@ -541,62 +561,31 @@ public class DrawablePanel extends JPanel {
 					}
 					
 				}//END OF for(int gX = 0...)
-				
 			}//END OF for(int gY = 0...)
-			
-			
-
 			this.repaint();
-			
 			
 			return groupPixels;
 		}else{
-			
 			return null;
-			
 		}//END OF else OF if(drawnYet)
-
-		
 	}//END OF attemptRead()
 	
 	
 	void onMouseClicked(int x, int y){
 		//exact same logic, routing to "onMouseDrag".
-		onMouseDrag(x, y);
+		if(!disableDrawing){
+			onMouseDrag(x, y);
+		}
 		
-		
+		//System.out.println("THE PLACE " + " " + x + " " + y);
+		if(!disableDrawing && trialManagerIndex != -1){
+			//If in the trial manager, send this click to frameRef.
+			frameRef.drawSubPanClicked(x, y);
+		}
 	}
-	
 	
 	void drawThickPoint(int targetX, int targetY){
 		
-		//The user has drawn since the screen was cleared.
-		
-		
-		
-		
-		
-		/*
-		for(int y = -2; y < 2; y++){
-			for(int x = -2; x < 2; x++ ){
-				
-				
-				int currentY = targetY + y;
-				int currentX = targetX + x;
-				
-				if(currentX >= 0 && currentY >= 0 && currentX < pixelsWidth && currentY < pixelsHeight ){
-					pixels[currentY][currentX] = true;
-				}
-				
-				
-			}
-		
-		}
-		*/
-		
-		
-
-
 		int pointFurthestLeft = (int) Math.round(targetX - drawRadius);
 		int pointFurthestRight = (int) Math.round(targetX + drawRadius);
 		
@@ -612,8 +601,6 @@ public class DrawablePanel extends JPanel {
 			//The entire point is guaranteed out of bounds.  Return (no points rendered)!
 			return;
 		}
-		
-		
 		
 
 		if(pointFurthestLeft < 0){
@@ -681,19 +668,15 @@ public class DrawablePanel extends JPanel {
 			extraPixelDrawYPadding = (newHeight - (pixelDrawMaxY - pixelDrawMinY) )/2;
 		}
 		
-		
 		targetWidth = (pixelDrawMaxX - pixelDrawMinX) + (int)(2 * extraPixelDrawXPadding);
 		targetHeight = (pixelDrawMaxY - pixelDrawMinY) + (int)(2 * extraPixelDrawYPadding);
-		
 		
 		
 		//System.out.println("SIZE : " + targetWidth + " " + targetHeight);
 		//System.out.println("RATIO IS " + ((float)targetWidth / (float)targetHeight)  );
 		
 		
-		
 		drawnYet = true;
-		
 		
 		float drawRadiusSquared = (float) Math.pow(drawRadius, 2);
 		
@@ -727,35 +710,27 @@ public class DrawablePanel extends JPanel {
 				*/
 				
 			}//END OF if(!Float.isNaN(y))
-			
 		}//END OF for(float x = ...)
-		
 		//y = +- root(-x^2 + 2)
-		
 	}
-	
-	
 	
 	void onMouseDrag(int x, int y){
 		
-		//int myWidth = getWidth();
-		//int myHeight = getHeight();
-		
+		if(trialManagerIndex != -1){
+			//cannot draw in the trial manager.
+			return;
+		}
 		
 		if(pixels != null && x >= 0 && y >= 0 && x < pixelsWidth && y < pixelsHeight){
 			//System.out.println("YES " + mouse_x + " " + mouse_y);
 			
 			if(prevDrag_x == -1 || prevDrag_y == -1){
 				//just color the current point.
-				//pixels[y][x] = true;
-				//System.out.println("CALLED");
 				drawThickPoint(x, y);
 				
 			}else{
 				//Otherwise, color a line from the previously dragged-on point to here.
-				
-				drawLine(prevDrag_x, prevDrag_y, x, y);
-				
+				drawLine(prevDrag_x, prevDrag_y, x, y, true);
 			}
 			repaint();
 			
@@ -777,9 +752,15 @@ public class DrawablePanel extends JPanel {
 	}
 	
 	
+	
+	public void drawLine(int x, int y, int x2, int y2){
+		drawLine(x, y, x2, y2, false);
+	}
+	
+	
 
 	//CREDIT TO http://tech-algorithm.com/articles/drawing-line-using-bresenham-algorithm/
-	public void drawLine(int x,int y,int x2, int y2) {
+	public void drawLine(int x,int y,int x2, int y2, boolean drawThickPoint) {
 	    int w = x2 - x ;
 	    int h = y2 - y ;
 	    int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0 ;
@@ -799,7 +780,9 @@ public class DrawablePanel extends JPanel {
 	        //g.drawLine(x,y, x, y) ;
 	    	pixels[y][x] = true;
 	    	
-	    	drawThickPoint(x, y);
+	    	if(drawThickPoint){
+	    		drawThickPoint(x, y);
+	    	}
 	    	
 	    	numerator += shortest ;
 	        if (!(numerator<longest)) {

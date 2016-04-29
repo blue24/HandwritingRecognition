@@ -2,6 +2,7 @@ package com.group2.handwritingrecognition;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 
 import javax.swing.JComponent;
@@ -22,15 +23,15 @@ public class Static {
 	
 	
 	
+	static boolean networkdNeedsTrainPrompt = false;
 	
-	
-	static int groupPixelsWidth = 12;
-	static int groupPixelsHeight = 18;
+	static int groupPixelsWidth = 16;
+	static int groupPixelsHeight = 24;
 	
 	static int boundsMinimumWidth = 20;
 	static int boundsMinimumHeight = 30;
 
-	static float boundsRatioMin = 0.45f;  //how tall can I be?
+	static float boundsRatioMin = 0.28f;  //how tall can I be?
 	static float boundsRatioMax = 1.8f;    //how short can I be?
 	//note: less is taller, value 0 is infinitely tall (no width),
 	//value 1 is square,
@@ -38,19 +39,22 @@ public class Static {
 	
 	
 	
+	static boolean autoTrain = false;
 
 	//How many trials for each number?
-	static int trialsPerNumber = 20;
+	static int trialsPerNumber = 5;
 	
 	//was 0.5?
-	static float learningRateMax = 0.65f;
-	static float learningRateMin = 0.15f;
+	static float learningRateMax = 0.45f;
+	static float learningRateMin = 0.18f;
 	
-	static int timesToTrainEach = 2000;
+	static int timesToTrainEach = 2800;
 	
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
-	static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
+	
+	static int numbOfNeuronsPerHiddenLayer = 100;  //same? double it? unsure.
+	//static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
 	
@@ -64,7 +68,6 @@ public class Static {
 	//Can the window be resized by the user?
 	static boolean windowIsResizable = true;
 	
-	static boolean debugTestLoadImage = true;
 	
 	static LoadMode loadMode = LoadMode.LOADWEIGHTS;
 			
@@ -84,6 +87,7 @@ public class Static {
 	
 	//Draw debug-things (the bounding rect of a number, sector-divisions, etc.)
 	static boolean drawDebug = true;
+	static boolean saveOnExit = true;
 	
 	//By what factor will the bounded region be split?  Default is groups of 16x16.
 	
@@ -92,14 +96,20 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
+	static Font fntSansSerif = new Font("SanSerif", Font.PLAIN, 18);
+	static Font fntSansSerifBig = new Font("SanSerif", Font.PLAIN, 48);
+	
 	
 	static GridBagConstraints gbc = new GridBagConstraints();
 	
 	
 	static Color clrWhite = new Color(255, 255, 255);
+	static Color clrOffWhite = new Color(238, 238, 238);
 	static Color clrBlack = new Color(0, 0, 0);
-	static Color clrRed = new Color(255, 0, 0);
-	static Color clrGreen = new Color(0, 255, 0);
+	static Color clrRed = new Color(225, 5, 5);
+	static Color clrGreen = new Color(12, 195, 12);
+	static Color clrGreenTrans = new Color(12, 215, 12, 175);
+	static Color clrCyanTrans = new Color(0, 240, 225, 155);
 	
 	
 	
@@ -118,6 +128,7 @@ public class Static {
 		addTo.add(toAdd, gbc);
 		
 	}
+	
 	
 
 }

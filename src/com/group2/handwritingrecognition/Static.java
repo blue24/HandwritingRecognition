@@ -23,28 +23,25 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	
 	
-	
-	
-	
 	//was 0.5?
-	static float learningRateMax = 0.45f;
-	static float learningRateMin = 0.18f;
+	static float learningRateMax = 1.40f;
+	static float learningRateMin = 0.08f;
 	
-	static int timesToTrainEach = 2200;
+	static int timesToTrainEach = 2500;
 	
-
+	
 	static int groupPixelsWidth = 16;
 	static int groupPixelsHeight = 24;
 	
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
 	
-	static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 60;  //same? double it? unsure.
 	//static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
 	
-
+	
 	
 	
 	

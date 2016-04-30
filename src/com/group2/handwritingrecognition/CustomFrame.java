@@ -427,6 +427,11 @@ public class CustomFrame extends JFrame{
 				drawSpecialRect = false;
 				trialSelected = -1;
 				deleteButton.setEnabled(false);
+				for(int i2 = 0; i2 < 10; i2++){
+					if(i2 != numberSelected){
+						buttonsForNumbers[i2].setEnabled(false);
+					}
+				}
 				drawSubPan.repaint();
 			}
 		break;

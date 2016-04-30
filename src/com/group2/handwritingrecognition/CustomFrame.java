@@ -1044,7 +1044,7 @@ public class CustomFrame extends JFrame{
 				
 			}//END OF actionPerformed(...)
 		});
-		trainButton.setEnabled(dueForWeightUpdate);
+		trainButton.setEnabled(!Static.trainButtonDisableable || dueForWeightUpdate);
 		
 
 		buttonsForNumbers = new CustomButton[10];

@@ -20,6 +20,8 @@ public class Static {
 	
 	static String fileSep = System.getProperty("file.separator");
 	
+	
+	
 	//DEBUG PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +56,7 @@ public class Static {
 	//Prompt the user if a re-train is needed to accurately represent the current trials.
 	static boolean networkdNeedsTrainPrompt = false;
 	static boolean autoTrain = false;
+	static boolean trainButtonDisableable = false;
 	
 	
 	static int boundsMinimumWidth = 20;

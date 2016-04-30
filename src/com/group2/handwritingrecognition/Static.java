@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
+import java.awt.Insets;
 
 import javax.swing.JComponent;
 
@@ -14,7 +15,7 @@ public class Static {
 		
 		
 	}
-	
+	static Insets noMargins = new Insets(2,8,2,8); 
 	static String fileSep = System.getProperty("file.separator");
 	
 	//DEBUG PROPERTIES

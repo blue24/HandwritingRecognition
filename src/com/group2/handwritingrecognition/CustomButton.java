@@ -17,7 +17,7 @@ public class CustomButton extends JButton{
 		}else{
 			setFont(Static.fntSansSerifSmall);
 		}
-		
+		this.setMargin(Static.noMargins);
 		this.setFocusable(false);
 		
 	}

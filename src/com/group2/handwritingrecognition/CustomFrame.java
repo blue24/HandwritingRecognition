@@ -40,6 +40,10 @@ public class CustomFrame extends JFrame{
 	
 	boolean loadedAnyReceivedSamples = false;
 	
+	CustomButton buttonsForNumbers[];
+	
+	SingleSamplePanel samplePan;
+	
 	public CustomFrame thisFrameRef;
 	private static final long serialVersionUID = -5763319334266549575L;
 	
@@ -170,6 +174,14 @@ public class CustomFrame extends JFrame{
 				int keyCode = event.getKeyCode();
 				if(keyCode == KeyEvent.VK_ENTER){
 					if(drawSubPan.disableDrawing == false){
+						
+						if(programMode == 1){
+							for(int i = 0; i < 10; i++){
+								buttonsForNumbers[i].setEnabled(true);
+							}
+						}
+						
+						
 						confirmClicked();
 					}
 					
@@ -401,6 +413,12 @@ public class CustomFrame extends JFrame{
 			if(choice != -1){
 				trialSelected = choice;
 				deleteButton.setEnabled(true);
+				for(int i2 = 0; i2 < 10; i2++){
+					if(i2 != numberSelected){
+						buttonsForNumbers[i2].setEnabled(true);
+					}
+				}
+				
 			}else{
 				failed = true;
 			}
@@ -558,27 +576,19 @@ public class CustomFrame extends JFrame{
 					trialSelected = -1;
 					
 					if(queueSaveTrials){
-						
 						writeTrials();
-						
-						
 						if(Static.autoTrain){
 							setGUIBlank();
 							startTrainingThread();
 						}else{
 							setGUIUse();
 						}
-						
 					}else{
 						setGUIUse();
 					}
-					
-					//setGUIUse();
 				break;
 				case 1:
 					drawSpecialRect = false;
-					//drawSubPan.trialManagerIndex = -1;
-					//numberSelected = -1;
 					trialSelected = -1;
 					setGUITrialManager(0);
 				break;
@@ -587,27 +597,37 @@ public class CustomFrame extends JFrame{
 			}//END OF actionPerformed(...)
 		});
 		
+		CustomLabel moveTrial = new CustomLabel(true);
+		moveTrial.setText("   Move to: ");
+		
+		buttonsForNumbers = new CustomButton[10];
+		
+		for(int i = 0; i < 10; i++){
+			final int index = i;
+			buttonsForNumbers[i] = new CustomButton(true);
+			buttonsForNumbers[i].addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e){
+					if(trialSelected != -1){
+						alterTrial(numberSelected, trialSelected, index);
+						queueSaveTrials = true;
+						dueForWeightUpdate = true;
+					}//END OF if(trialSelected != -1)
+					
+				}//END OF actionPerformed(...)
+			});
+			buttonsForNumbers[i].setText(String.valueOf(i));
+			buttonsForNumbers[i].setEnabled(false);
+			
+		}
+		
+		
+		
 		
 		deleteButton = new CustomButton(true);
 		deleteButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				if(trialSelected != -1){
-					deleteTrial(numberSelected, trialSelected);
-					queueSaveTrials = true;
-					dueForWeightUpdate = true;
-					
-					if(trialSelected >= characterData[numberSelected].trialMem.size()){
-						trialSelected--;
-						if(trialSelected != -1){
-							setSpecialRect(trialSelected);
-						}else{
-							drawSpecialRect = false;
-							deleteButton.setEnabled(false);
-						}
-					}
-				
-				}//END OF if(trialSelected != -1) (outtermost)
-				
+				alterTrial(numberSelected, trialSelected, -1);
 			}//END OF actionPerformed(...)
 		});
 		deleteButton.setText("Delete");
@@ -694,11 +714,16 @@ public class CustomFrame extends JFrame{
 		
 		JPanel tempPan2 = new JPanel();
 		tempPan2.setLayout(new BoxLayout(tempPan2, BoxLayout.X_AXIS));
-		tempPan2.add(deleteButton);
 		tempPan2.add(add1Trial);
 		tempPan2.add(add5Trial);
 		tempPan2.add(add10Trial);
 		tempPan2.add(addEndlessTrial);
+		
+		tempPan2.add(deleteButton);
+		tempPan2.add(moveTrial);
+		for(int i = 0; i < 10; i++){
+			tempPan2.add(buttonsForNumbers[i]);
+		}
 		
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 2, 2, 1, 0.0, 0.0, 0, 0, pan, tempPan2);
 		
@@ -816,7 +841,6 @@ public class CustomFrame extends JFrame{
 		btnConfirm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				confirmClicked();
-				thisFrameRef.setVisible(true);
 			}//END OF actionPerformed(...)
 		});
 		btnConfirm.setText("Confirm");
@@ -879,7 +903,7 @@ public class CustomFrame extends JFrame{
 		programMode = 1;
 		
 		
-		if(!Static.networkdNeedsTrainPrompt){
+		if(dueForWeightUpdate && !Static.networkdNeedsTrainPrompt){
 			currentInstructions = "NOTICE: samples altered, training required!";
 		}else{
 			currentInstructions = "Draw one number at a time and press \"confirm\" to submit.";
@@ -906,13 +930,20 @@ public class CustomFrame extends JFrame{
 		btnTxtClear.setText("Clear");
 		
 		
+		CustomLabel lblMessage2a = new CustomLabel(true); 
+		lblMessage2a.setText("Trial: " );
+		
+		samplePan = new SingleSamplePanel();
+		samplePan.setPreferredSize(new Dimension(Static.groupPixelsWidth, Static.groupPixelsHeight));
+		samplePan.setSize(new Dimension(Static.groupPixelsWidth, Static.groupPixelsHeight));
+		samplePan.setMaximumSize(new Dimension(Static.groupPixelsWidth, Static.groupPixelsHeight));
+		samplePan.setFocusable(false);
 		
 		
+		lblMessage2 = new CustomLabel(true);
+		lblMessage2.setText("   Guess:    " );
 		
-		lblMessage2 = new CustomLabel();
-		lblMessage2.setText("Last guess:   " );
-		
-		CustomLabel lblMessage3 = new CustomLabel();
+		CustomLabel lblMessage3 = new CustomLabel(true);
 		lblMessage3.setText("    Intention? :  " );
 		
 		CustomLabel lblSpacer = new CustomLabel();
@@ -935,7 +966,7 @@ public class CustomFrame extends JFrame{
 		trainButton.setEnabled(dueForWeightUpdate);
 		
 
-		final CustomButton[] buttonsForNumbers = new CustomButton[10];
+		buttonsForNumbers = new CustomButton[10];
 		
 		for(int i = 0; i < 10; i++){
 			final int index = i;
@@ -992,7 +1023,10 @@ public class CustomFrame extends JFrame{
 		});
 		doTrials.setText("Trials");
 		
-
+		
+		
+		
+		
 		int windowWidth = getPreferredSize().width;
 		
 		JPanel tempPan = new JPanel();
@@ -1019,6 +1053,8 @@ public class CustomFrame extends JFrame{
 		tempPan3.setLayout(new BoxLayout(tempPan3, BoxLayout.X_AXIS));
 		//Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 2, 4, 1, 0.7, 0.0, 0, 0, pan, txtOutput);
 		
+		tempPan3.add(lblMessage2a);
+		tempPan3.add(samplePan);
 		tempPan3.add(lblMessage2);
 		tempPan3.add(lblMessage3);
 		
@@ -1393,7 +1429,9 @@ public class CustomFrame extends JFrame{
 		
 		txtOutput.setText( txtOutput.getText() + guessNumb );
 		recentGuess = guessNumb;
-		lblMessage2.setText("Last guess : " + guessNumb);
+		lblMessage2.setText("   Guess : " + guessNumb);
+		samplePan.mySample = recentGuessDraw;
+		samplePan.repaint();
 	}
 	
 	
@@ -1422,7 +1460,48 @@ public class CustomFrame extends JFrame{
 		
 	}
 	
+	void moveTrial(int numb, int trial, int destChar){
+		
+		
+		boolean[][] someTrial = characterData[numb].trialMem.get(trial);
+		characterData[numb].trialMem.remove(trial);
+		
+		characterData[destChar].trialMem.add(someTrial);
+		showAvailableTrials();
+	}
 	
+	
+	void alterTrial(int numb, int trial, int destChar){
+		
+		if(trialSelected != -1){
+			if(destChar == -1){
+				deleteTrial(numb, trial);
+			}
+			else{
+				moveTrial(numb, trial, destChar);
+				
+			}
+			queueSaveTrials = true;
+			dueForWeightUpdate = true;
+			
+			if(trialSelected >= characterData[numberSelected].trialMem.size()){
+				trialSelected--;
+				if(trialSelected != -1){
+					setSpecialRect(trialSelected);
+				}else{
+					drawSpecialRect = false;
+					deleteButton.setEnabled(false);
+					for(int i2 = 0; i2 < 10; i2++){
+						buttonsForNumbers[i2].setEnabled(false);
+					}
+				}
+			}
+		
+		}//END OF if(trialSelected != -1) (outtermost)
+		
+		
+		
+	}
 	
 	
 	

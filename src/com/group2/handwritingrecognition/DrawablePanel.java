@@ -354,10 +354,48 @@ public class DrawablePanel extends JPanel {
 			
 			if(frameRef.drawSpecialRect == true){
 				
-				g.setColor(Static.clrRed);
+				g.setColor(Static.clrYellow);
 				drawSquareCheap(g, frameRef.specialRectx1, frameRef.specialRecty1, frameRef.specialRectx2, frameRef.specialRecty2);
 				drawSquareCheap(g, frameRef.specialRectx1 + 1, frameRef.specialRecty1 + 1, frameRef.specialRectx2 - 1, frameRef.specialRecty2- 1);
 			}
+			
+			if(frameRef.canDrawOtherSpecialRects){
+				
+				//int betterWidth = currentWidth - (currentWidth % frameRef.trialManagerTrialBoxWidth);
+				
+				for(int i = 0; i < frameRef.correctnessValues.length; i++){
+
+					//int tempx = (frameRef.trialManagerTrialBoxWidth*(i) ) % (betterWidth);
+					//int xMod = tempx ;
+					//int yMod = ((frameRef.trialManagerTrialBoxWidth*i)/(betterWidth)) * frameRef.trialManagerTrialBoxHeight;
+					
+					int xMod = frameRef.tempRectX[i];
+					int yMod = frameRef.tempRectY[i];
+					
+					if(frameRef.correctnessValues[i] == true){
+						g.setColor(Static.clrGreen);
+						drawSquareCheap(g, xMod, yMod, xMod + frameRef.trialManagerTrialBoxWidth, yMod + frameRef.trialManagerTrialBoxHeight);
+					}else{
+						
+						g.setColor(Static.clrRed);
+						drawSquareCheap(g, xMod, yMod, xMod + frameRef.trialManagerTrialBoxWidth, yMod + frameRef.trialManagerTrialBoxHeight);
+						drawSquareCheap(g, xMod+1, yMod+1, xMod + frameRef.trialManagerTrialBoxWidth-1, yMod + frameRef.trialManagerTrialBoxHeight-1);
+						
+						g.setColor(Static.clrRedTrans);
+						g.setFont(Static.fntSansSerifBig);
+						int fontHeight = g.getFontMetrics().getAscent() - g.getFontMetrics().getDescent();
+						String toDraw = String.valueOf(frameRef.guessedValues[i]);
+						g.drawString( toDraw, xMod + (frameRef.trialManagerTrialBoxWidth - g.getFontMetrics().stringWidth(toDraw))/2, yMod + frameRef.trialManagerTrialBoxHeight/2+ (fontHeight)/2  );
+						
+						
+					}
+					
+					//System.out.println("BOX # " + i + " COORDS : " + xMod + " " + yMod + " : " + (xMod + trialManagerBoxWidth) + " " +  (yMod + trialManagerBoxHeight) );
+					
+				}
+			}
+			
+			
 			
 		}else if(trialManagerIndex == 0){
 			g.setColor(Static.clrBlack);

@@ -15,7 +15,9 @@ public class Static {
 		
 		
 	}
-	static Insets noMargins = new Insets(2,8,2,8); 
+	static Insets noMargins = new Insets(2,2,2,2); 
+	static Insets minMargins = new Insets(1,6,1,6); 
+	
 	static String fileSep = System.getProperty("file.separator");
 	
 	//DEBUG PROPERTIES
@@ -121,7 +123,9 @@ public class Static {
 	static Color clrWhite = new Color(255, 255, 255);
 	static Color clrOffWhite = new Color(238, 238, 238);
 	static Color clrBlack = new Color(0, 0, 0);
+	static Color clrYellow = new Color(195, 195, 10);
 	static Color clrRed = new Color(225, 5, 5);
+	static Color clrRedTrans = new Color(195, 5, 5, 175);
 	static Color clrGreen = new Color(12, 195, 12);
 	static Color clrGreenTrans = new Color(12, 215, 12, 175);
 	static Color clrCyanTrans = new Color(0, 240, 225, 155);

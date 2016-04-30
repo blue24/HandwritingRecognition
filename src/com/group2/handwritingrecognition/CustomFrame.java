@@ -41,6 +41,7 @@ public class CustomFrame extends JFrame{
 	boolean loadedAnyReceivedSamples = false;
 	
 	CustomButton buttonsForNumbers[];
+	CustomButton testTrials;
 	
 	SingleSamplePanel samplePan;
 	
@@ -49,6 +50,14 @@ public class CustomFrame extends JFrame{
 	
 	int recentGuess;
 	boolean[][] recentGuessDraw;
+	
+	int[] tempRectX;
+	int[] tempRectY;
+	
+	
+	boolean canDrawOtherSpecialRects = false;
+	boolean[] correctnessValues = null;
+	int[] guessedValues = null;
 	
 	boolean dueForWeightUpdate = true;
 	
@@ -174,19 +183,27 @@ public class CustomFrame extends JFrame{
 				int keyCode = event.getKeyCode();
 				if(keyCode == KeyEvent.VK_ENTER){
 					if(drawSubPan.disableDrawing == false){
-						
 						if(programMode == 1){
 							for(int i = 0; i < 10; i++){
 								buttonsForNumbers[i].setEnabled(true);
 							}
 						}
-						
-						
 						confirmClicked();
 					}
 					
+				}//END OF if(keyCode == ...)
+				if(keyCode == KeyEvent.VK_DELETE){
+					if(drawSubPan.trialManagerIndex != -1 && numberSelected != -1 && trialSelected != -1){
+						alterTrial(numberSelected, trialSelected, -1);
+						queueSaveTrials = true;
+						dueForWeightUpdate = true;
+					}
+					
 				}
-			}
+				
+				
+				
+			}//END OF keyReleased(...)
 			@Override
 			public void keyTyped(KeyEvent event) {
 				
@@ -362,6 +379,8 @@ public class CustomFrame extends JFrame{
 	}
 	
 	void drawSubPanClicked(int x, int y){
+		canDrawOtherSpecialRects = false;
+		
 		boolean failed = false;
 		int width = 0;
 		
@@ -390,6 +409,9 @@ public class CustomFrame extends JFrame{
 			
 		break;
 		case 1:
+			
+			testTrials.setEnabled(true);
+			
 			width = drawSubPan.getWidth() - (drawSubPan.getWidth() % trialManagerTrialBoxWidth);
 			
 			if(x >= 0 && y >= 0 && x < width ){
@@ -411,6 +433,7 @@ public class CustomFrame extends JFrame{
 			}
 			
 			if(choice != -1){
+				
 				trialSelected = choice;
 				deleteButton.setEnabled(true);
 				for(int i2 = 0; i2 < 10; i2++){
@@ -520,11 +543,21 @@ public class CustomFrame extends JFrame{
 		
 		int height = drawSubPan.getHeight();
 		
+		
+		tempRectX = new int[characterData[numberSelected].trialMem.size()];
+		tempRectY = new int[characterData[numberSelected].trialMem.size()];
+		
+		
 		for(int i = 0; i < characterData[numberSelected].trialMem.size(); i++){
 			
 			int tempx = (trialManagerTrialBoxWidth*(i) ) % (width);
 			int xMod = tempx ;
 			int yMod = ((trialManagerTrialBoxWidth*i)/(width)) * trialManagerTrialBoxHeight;
+			
+			tempRectX[i] = xMod;
+			tempRectY[i] = yMod;
+			
+			
 			
 			//System.out.println("BOX # " + i + " COORDS : " + xMod + " " + yMod + " : " + (xMod + trialManagerBoxWidth) + " " +  (yMod + trialManagerBoxHeight) );
 			
@@ -623,6 +656,7 @@ public class CustomFrame extends JFrame{
 			});
 			buttonsForNumbers[i].setText(String.valueOf(i));
 			buttonsForNumbers[i].setEnabled(false);
+			buttonsForNumbers[i].setMargin(Static.minMargins);
 			
 		}
 		
@@ -653,6 +687,7 @@ public class CustomFrame extends JFrame{
 		add1Trial.setText("Add trial");
 		add1Trial.setEnabled(false);
 		
+		/*
 		CustomButton add5Trial = new CustomButton(true);
 		add5Trial.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
@@ -668,6 +703,7 @@ public class CustomFrame extends JFrame{
 		});
 		add5Trial.setText("Add 5");
 		add5Trial.setEnabled(false);
+		*/
 		
 		CustomButton add10Trial = new CustomButton(true);
 		add10Trial.addActionListener(new ActionListener() {
@@ -683,6 +719,41 @@ public class CustomFrame extends JFrame{
 		});
 		add10Trial.setText("Add 10");
 		add10Trial.setEnabled(false);
+		
+		testTrials = new CustomButton(true);
+		testTrials.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				
+				if(numberSelected != -1){
+					
+					
+					
+					testTrials.setEnabled(false);
+					trialSelected = -1;
+					drawSpecialRect = false;
+					
+					TrialMemory thisChar = characterData[numberSelected];
+					
+					
+					correctnessValues = new boolean[thisChar.trialMem.size()];
+					guessedValues = new int[thisChar.trialMem.size()];
+					
+					for(int i = 0; i < thisChar.trialMem.size(); i++){
+						int guess = net.attemptTrial(thisChar.trialMem.get(i));
+						correctnessValues[i] = (guess == numberSelected);
+						guessedValues[i] = guess;
+					}
+					
+					canDrawOtherSpecialRects = true;
+					drawSubPan.repaint();
+					
+				}
+				
+			}//END OF actionPerformed(...)
+		});
+		testTrials.setText("Test all trials");
+		testTrials.setEnabled(false);
+		
 		
 		CustomButton addEndlessTrial = new CustomButton(true);
 		addEndlessTrial.addActionListener(new ActionListener() {
@@ -714,18 +785,22 @@ public class CustomFrame extends JFrame{
 		lblMessage.setPreferredSize(new Dimension(getWidth(), 0) );
 		
 		tempPan.add(lblMessage);
+		
 		tempPan.add(backButton);
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 1, 2, 1, 0.0, 0.0, 0, 0, pan, tempPan);
 		
 		JPanel tempPan2 = new JPanel();
 		tempPan2.setLayout(new BoxLayout(tempPan2, BoxLayout.X_AXIS));
+		tempPan2.add(testTrials);
 		tempPan2.add(add1Trial);
-		tempPan2.add(add5Trial);
+		//tempPan2.add(add5Trial);
 		tempPan2.add(add10Trial);
 		tempPan2.add(addEndlessTrial);
 		
 		tempPan2.add(deleteButton);
 		tempPan2.add(moveTrial);
+		
+		
 		for(int i = 0; i < 10; i++){
 			tempPan2.add(buttonsForNumbers[i]);
 		}
@@ -757,9 +832,10 @@ public class CustomFrame extends JFrame{
 		break;
 		case 1:
 			add1Trial.setEnabled(true);
-			add5Trial.setEnabled(true);
+			//add5Trial.setEnabled(true);
 			add10Trial.setEnabled(true);
 			addEndlessTrial.setEnabled(true);
+			testTrials.setEnabled(true);
 			
 			currentInstructions = "Remove or add trials.";
 			betterPack();
@@ -990,6 +1066,7 @@ public class CustomFrame extends JFrame{
 			});
 			buttonsForNumbers[i].setText(String.valueOf(i));
 			buttonsForNumbers[i].setEnabled(false);
+			buttonsForNumbers[i].setMargin(Static.minMargins);
 			
 		}
 		
@@ -1083,6 +1160,9 @@ public class CustomFrame extends JFrame{
 	
 	void clearGUI(){
 		cancelError();
+		
+		canDrawOtherSpecialRects = false;
+		
 		drawSubPan.clearContents();
 		
 		this.drawSubPan.removeAll();

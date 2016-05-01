@@ -131,7 +131,6 @@ public class NeuralNetwork {
 	}
 	
 	
-	int thisTrial = 0;
 	
 	//Just sends each character's trial to be treated as neural network input, with an answer in mind (i, which is 0, 1, 2, 3, ...)
 	void train(TrialMemory[] characterData, int timesToTrain){
@@ -155,16 +154,38 @@ public class NeuralNetwork {
 			trainDivisor = 1;
 		}
 		
-		thisTrial = 0;
 		
 		drawablePanelRef.totalTrials = 0;
+		drawablePanelRef.trialsDone = 0;
 		
-		for(int i = 0; i < characterData.length; i++){
-			drawablePanelRef.totalTrials += characterData[i].trialMem.size();
+		
+		
+		int maxTrialsOfAnyChar = 0;
+		int[] diffMem = null;
+		
+		if(Static.trainNumbersEvenly){
+			diffMem = new int[characterData.length];
+			for(int i = 0; i < characterData.length; i++){
+				int thisCharactersNumberOfTrials = characterData[i].trialMem.size();
+				if(thisCharactersNumberOfTrials > maxTrialsOfAnyChar){
+					maxTrialsOfAnyChar = thisCharactersNumberOfTrials; 
+				}
+			}
+			
+			for(int i = 0; i < characterData.length; i++){
+				int thisCharactersNumberOfTrials = characterData[i].trialMem.size();
+				
+				diffMem[i] = thisCharactersNumberOfTrials - maxTrialsOfAnyChar;
+				
+			}
+			drawablePanelRef.totalTrials = maxTrialsOfAnyChar * characterData.length * timesToTrain;
+		}else{
+			for(int i = 0; i < characterData.length; i++){
+				drawablePanelRef.totalTrials += characterData[i].trialMem.size();
+			}
+			drawablePanelRef.totalTrials *= timesToTrain;
+			
 		}
-		
-		
-		drawablePanelRef.totalTrials *= timesToTrain;
 		
 		
 		for(int i3 = 0; i3 < timesToTrain; i3++){
@@ -180,11 +201,20 @@ public class NeuralNetwork {
 					
 					trainWithTrial(characterData[i].trialMem.get(i2), i);
 					
-					thisTrial++;
-					drawablePanelRef.trialsDone = thisTrial;
+					drawablePanelRef.trialsDone++;
 					
 				}//END OF for(int i2 = 0...)
-				//break;
+
+				if(Static.trainNumbersEvenly){
+					
+					for(int i2 = 0; i2 < diffMem[i]; i2++){
+						int chosenTrial = Static.randomIntInRange(0, characterData[i].trialMem.size()-1);
+						drawablePanelRef.trialsDone++;
+						trainWithTrial(characterData[i].trialMem.get(chosenTrial), i);
+					}
+					
+				}//END OF if(Static.trainNumbersEvenly)
+				
 			}//END OF for(int i = 0...)
 			
 		}

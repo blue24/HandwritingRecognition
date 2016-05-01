@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.util.Random;
 
 import javax.swing.JComponent;
 
@@ -26,10 +27,11 @@ public class Static {
 	///////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////
 	
+	static boolean trainNumbersEvenly = true;
 	
 	//was 0.5?
-	static float learningRateMax = 1.40f;
-	static float learningRateMin = 0.08f;
+	static float learningRateMax = 0.68f;
+	static float learningRateMin = 0.07f;
 	
 	static int timesToTrainEach = 2500;
 	
@@ -40,7 +42,7 @@ public class Static {
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
 	
-	static int numbOfNeuronsPerHiddenLayer = 60;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 72;  //same? double it? unsure.
 	//static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;
@@ -134,6 +136,13 @@ public class Static {
 	static Color clrCyanTrans = new Color(0, 240, 225, 155);
 	
 	
+	static Random r = new Random();
+	
+	public static int randomIntInRange(int min, int max){
+		
+		return min + r.nextInt(max - min + 1);
+		
+	}
 	
 	public static void addGridBagConstraintsComp(int fill, int anchor, int gridx, int gridy, int gridwidth, int gridheight, double weightx, double weighty, int ipadx, int ipady, JComponent addTo, Component toAdd  ){
 		

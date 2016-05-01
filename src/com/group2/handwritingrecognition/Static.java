@@ -30,8 +30,8 @@ public class Static {
 	static boolean trainNumbersEvenly = true;
 	
 	//was 0.5?
-	static float learningRateMax = 0.68f;
-	static float learningRateMin = 0.07f;
+	static float learningRateMax = 0.66f;
+	static float learningRateMin = 0.08f;
 	
 	static int timesToTrainEach = 2500;
 	
@@ -42,7 +42,7 @@ public class Static {
 	
 	static int numbOfInputNeurons = Static.groupPixelsWidth * Static.groupPixelsHeight;
 	
-	static int numbOfNeuronsPerHiddenLayer = 72;  //same? double it? unsure.
+	static int numbOfNeuronsPerHiddenLayer = 76;  //same? double it? unsure.
 	//static int numbOfNeuronsPerHiddenLayer = 50;  //same? double it? unsure.
 	static int numberOfHiddenLayers = 1;
 	static int numberOfOutputNeurons = 10;

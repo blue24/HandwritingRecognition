@@ -7,6 +7,11 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.TextField;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -17,6 +22,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +33,7 @@ import java.io.ObjectOutputStream;
 import java.util.Timer;
 
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -42,6 +49,7 @@ public class CustomFrame extends JFrame{
 	
 	CustomButton buttonsForNumbers[];
 	CustomButton testTrials;
+	CustomButton btnSendSampleToClipboard;
 	
 	SingleSamplePanel samplePan;
 	
@@ -116,9 +124,11 @@ public class CustomFrame extends JFrame{
 	String expectedDataName = "";
 	String expectedWeightsDataName = "";
 	
-	int programMode = 0;
+	int programMode = -1;
+	//-1 = do not rely on! (default for new screens, remains if they do not alter it)
 	//0 = doing trials (insert number samples).
 	//1 = test (let the user draw).
+	//2 = trial manager
 	
 	boolean endlessTrials = false;
 	int trialsLeft = 0;
@@ -183,11 +193,7 @@ public class CustomFrame extends JFrame{
 				int keyCode = event.getKeyCode();
 				if(keyCode == KeyEvent.VK_ENTER){
 					if(drawSubPan.disableDrawing == false){
-						if(programMode == 1){
-							for(int i = 0; i < 10; i++){
-								buttonsForNumbers[i].setEnabled(true);
-							}
-						}
+						
 						confirmClicked();
 					}
 					
@@ -1046,6 +1052,26 @@ public class CustomFrame extends JFrame{
 		});
 		trainButton.setEnabled(!Static.trainButtonDisableable || dueForWeightUpdate);
 		
+		
+		CustomLabel lblSpacer2 = new CustomLabel();
+		lblSpacer2.setText("   ");
+		
+		
+		btnSendSampleToClipboard = new CustomButton(true);
+		btnSendSampleToClipboard.setText("Copy Sample");
+		btnSendSampleToClipboard.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				//Again, Credit to:
+				//http://stackoverflow.com/questions/4552045/copy-bufferedimage-to-clipboard
+				CopyImage toSend = new CopyImage(samplePan.receiveSampleAsImage());
+	            Clipboard userClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+	            userClipboard.setContents( toSend, null );
+			}//END OF actionPerformed(...)
+		});
+		btnSendSampleToClipboard.setEnabled(false);
+		
+		
 
 		buttonsForNumbers = new CustomButton[10];
 		
@@ -1075,10 +1101,6 @@ public class CustomFrame extends JFrame{
 		btnConfirm = new CustomButton();
 		btnConfirm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				
-				for(int i = 0; i < 10; i++){
-					buttonsForNumbers[i].setEnabled(true);
-				}
 				
 				confirmClicked();
 				
@@ -1145,6 +1167,8 @@ public class CustomFrame extends JFrame{
 		}
 		tempPan3.add(lblSpacer);
 		tempPan3.add(trainButton);
+		tempPan3.add(lblSpacer2);
+		tempPan3.add(btnSendSampleToClipboard);
 		
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 3, 4, 1, 0.0, 0.0, 0, 0, pan, tempPan3);
 		
@@ -1159,6 +1183,8 @@ public class CustomFrame extends JFrame{
 	
 	
 	void clearGUI(){
+		programMode = -1;
+		
 		cancelError();
 		
 		canDrawOtherSpecialRects = false;
@@ -1477,6 +1503,15 @@ public class CustomFrame extends JFrame{
 	}
 	
 	void confirmClicked(){
+		
+		if(programMode == 1){
+			btnSendSampleToClipboard.setEnabled(true);
+			
+			for(int i = 0; i < 10; i++){
+				buttonsForNumbers[i].setEnabled(true);
+			}
+		}
+		
 		
 		boolean[][] thisSample = drawSubPan.attemptRead();
 		if(thisSample != null){

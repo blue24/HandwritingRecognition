@@ -30,10 +30,10 @@ public class Static {
 	static boolean trainNumbersEvenly = true;
 	
 	//was 0.5?
-	static float learningRateMax = 0.66f;
-	static float learningRateMin = 0.08f;
+	static float learningRateMax = 1.8f;
+	static float learningRateMin = 0.11f;
 	
-	static int timesToTrainEach = 2500;
+	static int timesToTrainEach = 200;
 	
 	
 	static int groupPixelsWidth = 16;

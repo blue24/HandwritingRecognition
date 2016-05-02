@@ -10,6 +10,7 @@ import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.DecimalFormat;
 import java.util.Timer;
 
 import javax.swing.BoxLayout;
@@ -50,6 +52,8 @@ public class CustomFrame extends JFrame{
 	CustomButton buttonsForNumbers[];
 	CustomButton testTrials;
 	CustomButton btnSendSampleToClipboard;
+	CustomButton btnSendOutputsToClipboard;
+	
 	
 	SingleSamplePanel samplePan;
 	
@@ -1073,6 +1077,52 @@ public class CustomFrame extends JFrame{
 		
 		
 
+		btnSendOutputsToClipboard = new CustomButton(true);
+		btnSendOutputsToClipboard.setText("Copy Outputs");
+		btnSendOutputsToClipboard.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				//Again, Credit to:
+				//http://stackoverflow.com/questions/4552045/copy-bufferedimage-to-clipboard
+				
+				String toSend = "";
+				for(int i = 0; i < net.outputLayer.neurons.size(); i++){
+					float thisOutput = net.outputLayer.neurons.get(i).outputCharge;
+					if(thisOutput < 0.000001f){
+						//remove scientific notation/
+						thisOutput = 0;
+					}
+					
+					DecimalFormat f = new DecimalFormat("#.######");
+					
+					//String thisOutputText = String.format(String.valueOf(thisOutput), "0.####");
+					String thisOutputText = f.format(thisOutput);
+					
+					
+					
+					
+					if(i == 0){
+						toSend = thisOutputText;
+					}else{
+						toSend += "\n" + thisOutputText;
+					}
+				}//END OF for(int i = 0...)
+				
+				StringSelection toSendSelection = new StringSelection(toSend);
+				Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clpbrd.setContents(toSendSelection, null);
+				
+				Clipboard userClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+	            userClipboard.setContents( toSendSelection, null );
+			}//END OF actionPerformed(...)
+		});
+		btnSendOutputsToClipboard.setEnabled(false);
+		
+		
+		
+		
+		
+
 		buttonsForNumbers = new CustomButton[10];
 		
 		for(int i = 0; i < 10; i++){
@@ -1169,6 +1219,7 @@ public class CustomFrame extends JFrame{
 		tempPan3.add(trainButton);
 		tempPan3.add(lblSpacer2);
 		tempPan3.add(btnSendSampleToClipboard);
+		tempPan3.add(btnSendOutputsToClipboard);
 		
 		Static.addGridBagConstraintsComp(GridBagConstraints.BOTH, GridBagConstraints.PAGE_START, 1, 3, 4, 1, 0.0, 0.0, 0, 0, pan, tempPan3);
 		
@@ -1506,6 +1557,7 @@ public class CustomFrame extends JFrame{
 		
 		if(programMode == 1){
 			btnSendSampleToClipboard.setEnabled(true);
+			btnSendOutputsToClipboard.setEnabled(true);
 			
 			for(int i = 0; i < 10; i++){
 				buttonsForNumbers[i].setEnabled(true);
